@@ -694,4 +694,6 @@
     <string name="config_headlineFontFamily">google-sans</string>
     <string name="config_headlineFontFamilyMedium">google-sans-medium</string>
     <string name="config_headlineFontFeatureSettings">ss03</string>
+    
+    <dimen name="config_viewConfigurationTouchSlop">6dp</dimen>
 </resources>
