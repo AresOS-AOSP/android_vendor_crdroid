@@ -462,4 +462,6 @@
 
     <!-- If AOD can show an ambient version of the wallpaper -->
     <bool name="config_dozeSupportsAodWallpaper">true</bool>
+
+    <dimen name="config_viewConfigurationTouchSlop">6dp</dimen>
 </resources>
