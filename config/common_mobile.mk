@@ -15,10 +15,14 @@ PRODUCT_PRODUCT_PROPERTIES += \
 
 # Apps
 PRODUCT_PACKAGES += \
+    Backgrounds
+
+ifneq ($(WITH_GMS),true)
+PRODUCT_PACKAGES += \
     AvatarPicker \
-    Backgrounds \
     Glimpse \
     LatinIME
+endif
 
 ifeq ($(PRODUCT_TYPE), go)
 PRODUCT_PACKAGES += \
@@ -36,16 +40,6 @@ endif
 
 PRODUCT_PACKAGES += \
     Launcher3Overlay
-
-# Charger
-PRODUCT_PACKAGES += \
-    charger_res_images
-
-ifneq ($(WITH_LINEAGE_CHARGER),false)
-PRODUCT_PACKAGES += \
-    lineage_charger_animation \
-    lineage_charger_animation_vendor
-endif
 
 # Legal
 PRODUCT_PRODUCT_PROPERTIES += \
