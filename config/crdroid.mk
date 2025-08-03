@@ -25,7 +25,6 @@ PRODUCT_PRODUCT_PROPERTIES += \
 # Blur
 ifneq ($(TARGET_SUPPORTS_BLUR),false)
 PRODUCT_PRODUCT_PROPERTIES += ro.surface_flinger.supports_background_blur=1
-endif
 
 # Cloned app exemption
 PRODUCT_COPY_FILES += \
@@ -53,13 +52,7 @@ PRODUCT_PACKAGES += \
     GameSpace \
     LMOFreeform \
     LMOFreeformSidebar \
-    OmniJaws \
-    OmniStyle
-
-ifneq ($(TARGET_DISABLE_MATLOG),true)
-PRODUCT_PACKAGES += \
-    MatLog
-endif
+    OmniJaws
 
 ifneq ($(TARGET_FACE_UNLOCK_SUPPORTED),false)
 PRODUCT_PACKAGES += \

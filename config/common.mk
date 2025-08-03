@@ -10,7 +10,7 @@ PRODUCT_SOURCE_ROOT_DIRS += -prebuilts/misc/protobuf_vendorcompat
 # Allow vendor prebuilt repos to exclude themselves from bp scanning
 -include $(sort $(wildcard vendor/*/*/exclude-bp.mk))
 
-PRODUCT_BRAND ?= crDroidAndroid
+PRODUCT_BRAND ?= AresOS
 
 ifeq ($(PRODUCT_GMS_CLIENTID_BASE),)
 PRODUCT_PRODUCT_PROPERTIES += \
@@ -18,6 +18,12 @@ PRODUCT_PRODUCT_PROPERTIES += \
 else
 PRODUCT_PRODUCT_PROPERTIES += \
     ro.com.google.clientidbase=$(PRODUCT_GMS_CLIENTID_BASE)
+endif
+
+# Gapps
+WITH_GMS ?= true
+ifeq ($(WITH_GMS),true)
+$(call inherit-product, vendor/pixel/gms/products/gms.mk)
 endif
 
 ifeq ($(PRODUCT_IS_ATV),true)
@@ -136,16 +142,13 @@ endif
 # Bootanimation
 TARGET_SCREEN_WIDTH ?= 1080
 TARGET_SCREEN_HEIGHT ?= 1920
-PRODUCT_PACKAGES += \
-    bootanimation.zip \
-    bootanimation-dark.zip
 
 # Lineage interfaces
 PRODUCT_PACKAGES += \
     framework_compatibility_matrix.lineage.xml
 
 # Lineage packages
-ifeq ($(PRODUCT_IS_ATV),)
+ifneq ($(WITH_GMS),true)
 PRODUCT_PACKAGES += \
     ExactCalculator \
     Jelly
@@ -275,9 +278,11 @@ endif
 $(call inherit-product, vendor/lineage/audio/audio.mk)
 
 # SetupWizard
+ifneq ($(WITH_GMS),true)
 PRODUCT_PRODUCT_PROPERTIES += \
     setupwizard.theme=glif_expressive \
     setupwizard.feature.day_night_mode_enabled=true
+endif
 
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += vendor/lineage/overlay/no-rro
 PRODUCT_PACKAGE_OVERLAYS += \
