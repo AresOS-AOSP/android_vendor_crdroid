@@ -22,10 +22,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
 PRODUCT_PRODUCT_PROPERTIES += \
     ro.input.video_enabled=false
 
-# Disable default frame rate limit for games
-PRODUCT_PRODUCT_PROPERTIES += \
-    debug.graphics.game_default_frame_rate.disabled=true
-
 # Enable blur
 TARGET_ENABLE_BLUR ?= false
 ifeq ($(TARGET_ENABLE_BLUR),true)
@@ -66,13 +62,7 @@ PRODUCT_PACKAGES += \
     LMOFreeform \
     LMOFreeformSidebar \
     LMOSystemUIClock \
-    OmniJaws \
-    OmniStyle
-
-ifneq ($(TARGET_DISABLE_MATLOG),true)
-PRODUCT_PACKAGES += \
-    MatLog
-endif
+    OmniJaws
 
 ifneq ($(TARGET_FACE_UNLOCK_SUPPORTED),false)
 PRODUCT_PACKAGES += \
