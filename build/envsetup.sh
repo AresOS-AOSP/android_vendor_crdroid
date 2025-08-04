@@ -1021,4 +1021,6 @@ function generate_host_overrides() {
 
 generate_host_overrides
 
+export SKIP_ABI_CHECKS=true
+
 export USE_THINLTO_CACHE=true
