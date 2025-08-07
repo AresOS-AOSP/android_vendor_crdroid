@@ -51,6 +51,9 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
     PihooksGmsFp="google/caiman_beta/caiman:16/BP41.250916.010.A1/14281945:user/release-keys" \
     PihooksGmsModel="Pixel 9 Pro"
 
+# Game Props
+TARGET_PRODUCT_PROP += vendor/lineage/config/gameprops.prop
+
 # Cloned app exemption
 PRODUCT_COPY_FILES += \
     vendor/lineage/prebuilt/common/etc/sysconfig/preinstalled-packages-platform-crdroid-product.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/preinstalled-packages-platform-crdroid-product.xml
