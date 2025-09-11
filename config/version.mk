@@ -23,4 +23,5 @@ LINEAGE_DISPLAY_VERSION := v$(PRODUCT_VERSION_MAJOR).$(PRODUCT_VERSION_MINOR)-$(
 PRODUCT_PRODUCT_PROPERTIES += \
     ro.crdroid.build.version=$(CR_VERSION) \
     ro.crdroid.display.version=$(LINEAGE_DISPLAY_VERSION) \
-    ro.crdroid.version=$(PRODUCT_VERSION_MAJOR).$(PRODUCT_VERSION_MINOR)
+    ro.crdroid.version=$(PRODUCT_VERSION_MAJOR).$(PRODUCT_VERSION_MINOR) \
+    ro.ares.version=$(LINEAGE_VERSION)
