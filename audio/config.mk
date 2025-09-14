@@ -27,7 +27,7 @@ PRODUCT_COPY_FILES += \
     $(call find-copy-subdir-files,*,$(AUDIO_SOURCE_DIR)/ui,$(AUDIO_DEST_DIR)/ui)
 
 PRODUCT_PRODUCT_PROPERTIES += \
-    ro.config.ringtone=23_echo_of_fate.ogg \
-    ro.config.notification_sound=01_oi.ogg \
-    ro.config.alarm_alert=11_isekai.ogg
+    ro.config.ringtone=Mangrove.ogg \
+    ro.config.notification_sound=Gentle_bells.ogg \
+    ro.config.alarm_alert=Melody.ogg
 
