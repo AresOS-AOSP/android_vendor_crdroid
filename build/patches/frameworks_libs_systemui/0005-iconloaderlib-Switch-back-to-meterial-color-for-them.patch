@@ -1,0 +1,49 @@
+From 890ce9c6c10cd23467b9fe402c3883c12abf5f39 Mon Sep 17 00:00:00 2001
+From: Ghosuto <clash.raja10@gmail.com>
+Date: Sun, 17 Aug 2025 13:20:42 +0000
+Subject: [PATCH 5/5] iconloaderlib: Switch back to meterial color for themed
+ icons
+
+Change-Id: I0951505f1a3a1409b97d724c07bce5c664d2fa2b
+Signed-off-by: Ghosuto <clash.raja10@gmail.com>
+---
+ iconloaderlib/res/values-night-v31/colors.xml | 6 +++---
+ iconloaderlib/res/values-v31/colors.xml       | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/iconloaderlib/res/values-night-v31/colors.xml b/iconloaderlib/res/values-night-v31/colors.xml
+index 2b48409..5fe1f1f 100644
+--- a/iconloaderlib/res/values-night-v31/colors.xml
++++ b/iconloaderlib/res/values-night-v31/colors.xml
+@@ -17,9 +17,9 @@
+ */
+ -->
+ <resources>
+-    <color name="themed_icon_color">@android:color/system_accent1_200</color>
+-    <color name="themed_icon_adaptive_background_color">@android:color/system_neutral1_800</color>
++    <color name="themed_icon_color">@android:color/system_accent1_100</color>
++    <color name="themed_icon_adaptive_background_color">@android:color/system_neutral1_900</color>
+     <color name="themed_icon_background_color">@android:color/system_neutral1_900</color>
+-    <color name="themed_badge_icon_color">@android:color/system_accent1_200</color>
++    <color name="themed_badge_icon_color">@android:color/system_accent1_100</color>
+     <color name="themed_badge_icon_background_color">@android:color/system_neutral1_900</color>
+ </resources>
+diff --git a/iconloaderlib/res/values-v31/colors.xml b/iconloaderlib/res/values-v31/colors.xml
+index 6e71a5c..f477993 100644
+--- a/iconloaderlib/res/values-v31/colors.xml
++++ b/iconloaderlib/res/values-v31/colors.xml
+@@ -17,9 +17,9 @@
+ */
+ -->
+ <resources>
+-    <color name="themed_icon_color">@android:color/system_accent1_700</color>
++    <color name="themed_icon_color">@android:color/system_accent1_600</color>
+     <color name="themed_icon_background_color">@android:color/system_neutral1_50</color>
+     <color name="themed_icon_adaptive_background_color">@android:color/system_neutral1_50</color>
+-    <color name="themed_badge_icon_color">@android:color/system_accent1_700</color>
++    <color name="themed_badge_icon_color">@android:color/system_accent1_600</color>
+     <color name="themed_badge_icon_background_color">@android:color/system_neutral1_50</color>
+ </resources>
+-- 
+2.51.0
+

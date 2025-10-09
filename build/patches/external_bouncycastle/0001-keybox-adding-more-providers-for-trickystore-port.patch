@@ -1,0 +1,39 @@
+From 03bed1b807e65cde0ccc48c2c0b6a4733b87121f Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Thu, 25 Dec 2025 10:27:35 +0800
+Subject: [PATCH] [keybox] adding more providers for trickystore port
+
+Change-Id: I3a440b38f10a8aa9286405d1f7c32477f9f3c7b6
+Signed-off-by: Dmitrii <bankersenator@gmail.com>
+---
+ .../org/bouncycastle/jcajce/provider/asymmetric/EC.java   | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/repackaged_platform/bcprov/src/main/java/com/android/internal/org/bouncycastle/jcajce/provider/asymmetric/EC.java b/repackaged_platform/bcprov/src/main/java/com/android/internal/org/bouncycastle/jcajce/provider/asymmetric/EC.java
+index 11beb11..3b945f6 100644
+--- a/repackaged_platform/bcprov/src/main/java/com/android/internal/org/bouncycastle/jcajce/provider/asymmetric/EC.java
++++ b/repackaged_platform/bcprov/src/main/java/com/android/internal/org/bouncycastle/jcajce/provider/asymmetric/EC.java
+@@ -196,14 +196,18 @@ public class EC
+                 provider.addAlgorithm("KeyFactory.ECMQV", PREFIX + "KeyFactorySpi$ECMQV");
+                 provider.addAlgorithm("KeyPairGenerator.ECMQV", PREFIX + "KeyPairGeneratorSpi$ECMQV");
+             }
+-            
++            */
++
+             provider.addAlgorithm("KeyFactory.EC", PREFIX + "KeyFactorySpi$EC");
+             provider.addAlgorithm("KeyFactory.ECDSA", PREFIX + "KeyFactorySpi$ECDSA");
+             provider.addAlgorithm("KeyFactory.ECDH", PREFIX + "KeyFactorySpi$ECDH");
+-            provider.addAlgorithm("KeyFactory.ECDHC", PREFIX + "KeyFactorySpi$ECDHC"); */
++            provider.addAlgorithm("KeyFactory.ECDHC", PREFIX + "KeyFactorySpi$ECDHC");
+             
+             provider.addAlgorithm("KeyPairGenerator.EC", PREFIX + "KeyPairGeneratorSpi$EC");
+             provider.addAlgorithm("KeyPairGenerator.ECDSA", PREFIX + "KeyPairGeneratorSpi$ECDSA");
++
++            addSignatureAlgorithm(provider, "SHA256", "ECDSA", PREFIX + "SignatureSpi$ecDSA256", X9ObjectIdentifiers.ecdsa_with_SHA256, generalEcAttributes);
++
+             /*
+             provider.addAlgorithm("KeyPairGenerator.ECDH", PREFIX + "KeyPairGeneratorSpi$ECDH");
+             provider.addAlgorithm("KeyPairGenerator.ECDHWITHSHA1KDF", PREFIX + "KeyPairGeneratorSpi$ECDH");
+-- 
+2.51.0
+

@@ -1,0 +1,73 @@
+From f4e760455aaf7a1ce57c2dcfc908ce9b365e7326 Mon Sep 17 00:00:00 2001
+From: Ghosuto <clash.raja10@gmail.com>
+Date: Fri, 18 Jul 2025 07:05:33 +0000
+Subject: [PATCH 3/5] iconloaderlib: Update themed icon colors
+
+Change-Id: I989febb3a7c547e29f86bc2ad98512ce0ded02c2
+Signed-off-by: Ghosuto <clash.raja10@gmail.com>
+---
+ iconloaderlib/res/values-night-v31/colors.xml | 2 +-
+ iconloaderlib/res/values-night/colors.xml     | 2 +-
+ iconloaderlib/res/values-v31/colors.xml       | 4 ++--
+ iconloaderlib/res/values/colors.xml           | 4 ++--
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/iconloaderlib/res/values-night-v31/colors.xml b/iconloaderlib/res/values-night-v31/colors.xml
+index 48d1b89..ffe5cd7 100644
+--- a/iconloaderlib/res/values-night-v31/colors.xml
++++ b/iconloaderlib/res/values-night-v31/colors.xml
+@@ -19,7 +19,7 @@
+ <resources>
+     <color name="themed_icon_color">@android:color/system_accent1_200</color>
+     <color name="themed_icon_adaptive_background_color">@android:color/system_neutral1_800</color>
+-    <color name="themed_icon_background_color">@android:color/system_neutral1_800</color>
++    <color name="themed_icon_background_color">@android:color/system_neutral1_900</color>
+     <color name="themed_badge_icon_color">@android:color/system_accent2_800</color>
+     <color name="themed_badge_icon_background_color">@android:color/system_neutral2_200</color>
+ </resources>
+diff --git a/iconloaderlib/res/values-night/colors.xml b/iconloaderlib/res/values-night/colors.xml
+index 24b72f6..ef5bb0b 100644
+--- a/iconloaderlib/res/values-night/colors.xml
++++ b/iconloaderlib/res/values-night/colors.xml
+@@ -18,7 +18,7 @@
+ -->
+ <resources>
+     <color name="themed_icon_color">#A8C7FA</color>
+-    <color name="themed_icon_background_color">@android:color/system_neutral1_800</color>
++    <color name="themed_icon_background_color">@android:color/system_neutral1_900</color>
+     <color name="themed_badge_icon_color">#003355</color>
+     <color name="themed_badge_icon_background_color">@android:color/system_neutral2_200</color>
+ </resources>
+diff --git a/iconloaderlib/res/values-v31/colors.xml b/iconloaderlib/res/values-v31/colors.xml
+index 0bcd4a0..34dae01 100644
+--- a/iconloaderlib/res/values-v31/colors.xml
++++ b/iconloaderlib/res/values-v31/colors.xml
+@@ -18,8 +18,8 @@
+ -->
+ <resources>
+     <color name="themed_icon_color">@android:color/system_accent1_700</color>
+-    <color name="themed_icon_background_color">@android:color/system_accent1_100</color>
+-    <color name="themed_icon_adaptive_background_color">@android:color/system_accent1_500</color>
++    <color name="themed_icon_background_color">@android:color/system_neutral1_50</color>
++    <color name="themed_icon_adaptive_background_color">@android:color/system_neutral1_50</color>
+     <color name="themed_badge_icon_color">@android:color/system_accent1_700</color>
+     <color name="themed_badge_icon_background_color">@android:color/system_accent1_100</color>
+ </resources>
+diff --git a/iconloaderlib/res/values/colors.xml b/iconloaderlib/res/values/colors.xml
+index 56ae0b6..476423c 100644
+--- a/iconloaderlib/res/values/colors.xml
++++ b/iconloaderlib/res/values/colors.xml
+@@ -17,8 +17,8 @@
+ */
+ -->
+ <resources>
+-    <color name="themed_icon_color">#0842A0</color>
+-    <color name="themed_icon_background_color">#D3E3FD</color>
++    <color name="themed_icon_color">@android:color/system_accent1_700</color>
++    <color name="themed_icon_background_color">@android:color/system_neutral1_50</color>
+     <color name="themed_badge_icon_color">#0842A0</color>
+     <color name="themed_badge_icon_background_color">#D3E3FD</color>
+ 
+-- 
+2.51.0
+

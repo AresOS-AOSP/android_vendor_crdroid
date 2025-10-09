@@ -1,0 +1,29 @@
+From d43b2a9911b6d25c02c879c5535c682d556322da Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Mon, 23 Feb 2026 20:02:22 +0000
+Subject: [PATCH] Revert "sepolicy: Restrict pixel props usage"
+
+This reverts commit 4c1c9c5d054c0e9ca0250c4bf1a864d6a86d7e55.
+---
+ common/private/property_contexts | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/common/private/property_contexts b/common/private/property_contexts
+index 631dfe1..de0cf9a 100644
+--- a/common/private/property_contexts
++++ b/common/private/property_contexts
+@@ -36,11 +36,6 @@ ro.lineage.releasetype                 u:object_r:custom_version_prop:s0
+ persist.vendor.nfc.config_file_name    u:object_r:vendor_persist_nfc_prop:s0 exact string
+ persist.vendor.nfc.fw_file_name        u:object_r:vendor_persist_nfc_prop:s0 exact string
+ 
+-# Pixel props
+-persist.sys.spoof.                     u:object_r:custom_version_prop:s0
+-persist.sys.pihooks.                   u:object_r:custom_version_prop:s0
+-persist.sys.pixelprops.                u:object_r:custom_version_prop:s0
+-
+ # Recovery battery
+ ro.recovery.batteryless                u:object_r:recovery_config_prop:s0 exact bool
+ 
+-- 
+2.51.0
+
