@@ -1,0 +1,379 @@
+From 6ab4611f07f2ab9fe442bfdffcc006f5701e165b Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Wed, 6 Aug 2025 06:49:02 +0000
+Subject: [PATCH 1/8] Revert SF changes
+
+Change-Id: I4fd45fb7e5e8d5e2e060589d9dcd226504a3eb36
+---
+ .../surfaceflinger/Scheduler/LayerInfo.cpp    |  5 ++
+ services/surfaceflinger/Scheduler/LayerInfo.h |  6 +-
+ .../Scheduler/RefreshRateSelector.cpp         | 87 +++----------------
+ .../Scheduler/RefreshRateSelector.h           |  9 +-
+ .../surfaceflinger/Scheduler/Scheduler.cpp    | 19 +---
+ services/surfaceflinger/Scheduler/Scheduler.h |  5 --
+ 6 files changed, 23 insertions(+), 108 deletions(-)
+
+diff --git a/services/surfaceflinger/Scheduler/LayerInfo.cpp b/services/surfaceflinger/Scheduler/LayerInfo.cpp
+index fa2c3b9..8c22de1 100644
+--- a/services/surfaceflinger/Scheduler/LayerInfo.cpp
++++ b/services/surfaceflinger/Scheduler/LayerInfo.cpp
+@@ -212,6 +212,11 @@ std::optional<nsecs_t> LayerInfo::calculateAverageFrameTime() const {
+     const bool isMissingPresentTime =
+             std::any_of(mFrameTimes.begin(), mFrameTimes.end(),
+                         [](auto frame) { return frame.presentTime == 0; });
++    if (isMissingPresentTime && !mLastRefreshRate.reported.isValid()) {
++        // If there are no presentation timestamps and we haven't calculated
++        // one in the past then we can't calculate the refresh rate
++        return std::nullopt;
++    }
+ 
+     // Calculate the average frame time based on presentation timestamps. If those
+     // doesn't exist, we look at the time the buffer was queued only. We can do that only if
+diff --git a/services/surfaceflinger/Scheduler/LayerInfo.h b/services/surfaceflinger/Scheduler/LayerInfo.h
+index 12dbff4..a7847bc 100644
+--- a/services/surfaceflinger/Scheduler/LayerInfo.h
++++ b/services/surfaceflinger/Scheduler/LayerInfo.h
+@@ -265,8 +265,8 @@ private:
+     // the refresh rate calculated is consistent with past values
+     class RefreshRateHistory {
+     public:
+-        static constexpr auto HISTORY_SIZE = 30;
+-        static constexpr std::chrono::nanoseconds HISTORY_DURATION = 300ms;
++        static constexpr auto HISTORY_SIZE = 90;
++        static constexpr std::chrono::nanoseconds HISTORY_DURATION = 2s;
+ 
+         RefreshRateHistory(const std::string& name) : mName(name) {}
+ 
+@@ -300,7 +300,7 @@ private:
+         const std::string mName;
+         mutable std::optional<HeuristicTraceTagData> mHeuristicTraceTagData;
+         std::deque<RefreshRateData> mRefreshRates;
+-        static constexpr float MARGIN_CONSISTENT_FPS = 5.0;
++        static constexpr float MARGIN_CONSISTENT_FPS = 1.0;
+         static constexpr float MARGIN_CONSISTENT_FPS_FOR_CLOSEST_REFRESH_RATE = 5.0;
+     };
+ 
+diff --git a/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp b/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
+index 045928a..97f1f8f 100644
+--- a/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
++++ b/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
+@@ -33,7 +33,6 @@
+ #include <ftl/fake_guard.h>
+ #include <ftl/match.h>
+ #include <ftl/unit.h>
+-#include <scheduler/Fps.h>
+ #include <scheduler/FrameRateMode.h>
+ 
+ #include "RefreshRateSelector.h"
+@@ -509,10 +508,9 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+         -> RankedFrameRates {
+     using namespace fps_approx_ops;
+     SFTRACE_CALL();
+-    ALOGV("%s: %zu layers, signals: %s", __func__, layers.size(), signals.toString().c_str());
++    ALOGV("%s: %zu layers", __func__, layers.size());
+ 
+     const auto& activeMode = *getActiveModeLocked().modePtr;
+-    FrameRateRanking ranking;
+ 
+     if (pacesetterFps.isValid()) {
+         ALOGV("Follower display");
+@@ -535,7 +533,7 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     // Keep the display at max frame rate for the duration of powering on the display.
+     if (signals.powerOnImminent) {
+         ALOGV("Power On Imminent");
+-        ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Descending);
++        const auto ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Descending);
+         SFTRACE_FORMAT_INSTANT("%s (Power On Imminent)",
+                                to_string(ranking.front().frameRateMode.fps).c_str());
+         return {ranking, GlobalSignals{.powerOnImminent = true}};
+@@ -591,8 +589,6 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     int seamedFocusedLayers = 0;
+     int categorySmoothSwitchOnlyLayers = 0;
+ 
+-    static bool localIsIdle;
+-
+     for (const auto& layer : layers) {
+         switch (layer.vote) {
+             case LayerVoteType::NoVote:
+@@ -654,43 +650,13 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     const auto anchorGroup =
+             seamedFocusedLayers > 0 ? activeMode.getGroup() : defaultMode->getGroup();
+ 
+-    const auto selectivelyForceIdle = [&]() REQUIRES(mLock) -> RankedFrameRates {
+-        ALOGV("selectivelyForceIdle(): localIsIdle: %d, hasExplicitVoteLayers: %d",
+-                localIsIdle, hasExplicitVoteLayers);
+-
+-        if (localIsIdle && !hasExplicitVoteLayers && ranking.front().frameRateMode.fps > mIdleFps) {
+-            /*
+-             * We heavily rely on touch to boost higher than 60 fps.
+-             * Fallback to idle fps if a higher fps was calculated.
+-             */
+-            auto idleRanking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Ascending);
+-            // Find the idle mode in the ranking
+-            const auto it = std::find_if(idleRanking.begin(), idleRanking.end(),
+-                                   [&](const ScoredFrameRate& sfr) {
+-                                       return isApproxEqual(sfr.frameRateMode.fps, mIdleFps);
+-                                   });
+-            if (it != idleRanking.end()) {
+-                idleRanking = FrameRateRanking{*it};
+-                ALOGV("Forcing idle");
+-            }
+-            // Otherwise return the idle ranking as it is
+-            ALOGV("%s scored", to_string(idleRanking.front().frameRateMode.fps).c_str());
+-            return {idleRanking, GlobalSignals{.idle = true}};
+-        }
+-
+-        // Handle the case where we don't force idle or bestRefreshRate is not available
+-        ALOGV("%s scored", to_string(ranking.front().frameRateMode.fps).c_str());
+-        return {ranking, kNoSignals};
+-    };
+-
+     // Consider the touch event if there are no Explicit* layers. Otherwise wait until after we've
+     // selected a refresh rate to see if we should apply touch boost.
+     if (signals.touch && !hasExplicitVoteLayers) {
+         ALOGV("Touch Boost");
+-        ranking = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
++        const auto ranking = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
+         SFTRACE_FORMAT_INSTANT("%s (Touch Boost)",
+                                to_string(ranking.front().frameRateMode.fps).c_str());
+-        localIsIdle = false;
+         return {ranking, GlobalSignals{.touch = true}};
+     }
+ 
+@@ -700,23 +666,17 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     if (!signals.touch && signals.idle &&
+         !(policy->primaryRangeIsSingleRate() && hasExplicitVoteLayers)) {
+         ALOGV("Idle");
+-        ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Ascending);
++        const auto ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Ascending);
+         SFTRACE_FORMAT_INSTANT("%s (Idle)", to_string(ranking.front().frameRateMode.fps).c_str());
+-        localIsIdle = true;
+-        return selectivelyForceIdle();
++        return {ranking, GlobalSignals{.idle = true}};
+     }
+ 
+-    // If there are no layers, prefer to stay with the current config
+     if (layers.empty() || noVoteLayers == layers.size()) {
+         ALOGV("No layers with votes");
+-        ranking = rankFrameRates(anchorGroup, RefreshRateOrder::Ascending, activeMode.getId());
++        const auto ranking = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
+         SFTRACE_FORMAT_INSTANT("%s (No layers with votes)",
+                                to_string(ranking.front().frameRateMode.fps).c_str());
+-        // If all layers have no vote, consider the heuristic idle scenario
+-        if (signals.heuristicIdle) {
+-            localIsIdle = true;
+-        }
+-        return selectivelyForceIdle();
++        return {ranking, kNoSignals};
+     }
+ 
+     // If all layers are category NoPreference, use the current config.
+@@ -736,18 +696,14 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     // Only if all layers want Min we should return Min
+     if (noVoteLayers + minVoteLayers == layers.size()) {
+         ALOGV("All layers Min");
+-        ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Ascending,
++        const auto ranking = rankFrameRates(activeMode.getGroup(), RefreshRateOrder::Ascending,
+                                             std::nullopt, [&](FrameRateMode mode) {
+                                                 return !smoothSwitchOnly ||
+                                                         mode.modePtr->getId() == activeModeId;
+                                             });
+         SFTRACE_FORMAT_INSTANT("%s (All layers Min)",
+                                to_string(ranking.front().frameRateMode.fps).c_str());
+-        // If all layers have min vote, consider the heuristic idle scenario
+-        if (signals.heuristicIdle) {
+-            localIsIdle = true;
+-        }
+-        return selectivelyForceIdle();
++        return {ranking, kNoSignals};
+     }
+ 
+     // Find the best refresh rate based on score
+@@ -824,14 +780,6 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+                 continue;
+             }
+ 
+-            if (layer.vote == LayerVoteType::Heuristic && signals.heuristicIdle && fps > 60_Hz) {
+-                // Time for heuristic layer to keep using high refresh rate has expired
+-                localIsIdle = true;
+-                ALOGV("%s expired to keep using %s", formatLayerInfo(layer, weight).c_str(),
+-                      to_string(fps).c_str());
+-                continue;
+-            }
+-
+             const float layerScore = calculateLayerScoreLocked(layer, fps, isSeamlessSwitch);
+             const float weightedLayerScore = weight * layerScore;
+ 
+@@ -929,6 +877,7 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     std::sort(scores.begin(), scores.end(),
+               RefreshRateScoreComparator{.refreshRateOrder = refreshRateOrder});
+ 
++    FrameRateRanking ranking;
+     ranking.reserve(scores.size());
+ 
+     std::transform(scores.begin(), scores.end(), back_inserter(ranking),
+@@ -982,6 +931,7 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     const bool isLateTouchBoost = isLateGlobalTouchBoost || isAppTouchBoost;
+     if (isLateTouchBoost && isTouchBoostForExplicitExact() && isTouchBoostForCategory()) {
+         const auto touchRefreshRates = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
++        using fps_approx_ops::operator<;
+ 
+         if (scores.front().frameRateMode.fps <= touchRefreshRates.front().frameRateMode.fps) {
+             ALOGV("Touch Boost [late]");
+@@ -1002,15 +952,9 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+         return {ascendingWithPreferred, kNoSignals};
+     }
+ 
+-    // Prevent forced idle if we have a max vote layer
+-    if (maxVoteLayers > 0 && localIsIdle) {
+-        ALOGV("Max vote layer present, do not idle");
+-        localIsIdle = false;
+-    }
+-
+     ALOGV("%s (scored)", to_string(ranking.front().frameRateMode.fps).c_str());
+     SFTRACE_FORMAT_INSTANT("%s (scored)", to_string(ranking.front().frameRateMode.fps).c_str());
+-    return selectivelyForceIdle();
++    return {ranking, kNoSignals};
+ }
+ 
+ auto RefreshRateSelector::getFrameRateOverrides(const std::vector<LayerRequirement>& layers,
+@@ -1588,13 +1532,6 @@ void RefreshRateSelector::constructAvailableRefreshRates() {
+ 
+     mPrimaryFrameRates = filterRefreshRates(policy->primaryRanges, "primary");
+     mAppRequestFrameRates = filterRefreshRates(policy->appRequestRanges, "app request");
+-    // Idle refresh rate is 60 Hz while respecting minimum of primary and app ranges.
+-    const Fps minPrimary = mPrimaryFrameRates.front().modePtr.get()->getVsyncRate();
+-    const Fps minAppRequest = mAppRequestFrameRates.front().modePtr.get()->getVsyncRate();
+-    mIdleFps = std::max({60_Hz, minPrimary, minAppRequest}, fps_approx_ops::operator<);
+-
+-    ALOGV("idle refresh rate calculated: %s", to_string(mIdleFps).c_str());
+-
+     mAllFrameRates = filterRefreshRates(FpsRanges(getSupportedFrameRateRangeLocked(),
+                                                   getSupportedFrameRateRangeLocked()),
+                                         "full frame rates");
+diff --git a/services/surfaceflinger/Scheduler/RefreshRateSelector.h b/services/surfaceflinger/Scheduler/RefreshRateSelector.h
+index 832c214..8e173b1 100644
+--- a/services/surfaceflinger/Scheduler/RefreshRateSelector.h
++++ b/services/surfaceflinger/Scheduler/RefreshRateSelector.h
+@@ -215,19 +215,16 @@ public:
+         // Whether the display is about to be powered on, or has been in PowerMode::ON
+         // within the timeout of DisplayPowerTimer.
+         bool powerOnImminent = false;
+-        // Whether the expiry for high refresh rate on heuristic layers has been reached.
+-        bool heuristicIdle = false;
+ 
+         bool shouldEmitEvent() const { return !idle; }
+ 
+         bool operator==(GlobalSignals other) const {
+             return touch == other.touch && idle == other.idle &&
+-                    powerOnImminent == other.powerOnImminent &&
+-                    heuristicIdle == other.heuristicIdle;
++                    powerOnImminent == other.powerOnImminent;
+         }
+ 
+         auto toString() const {
+-            return ftl::Concat("{touch=", touch, ", idle=", idle, ", heuristicIdle=", heuristicIdle,
++            return ftl::Concat("{touch=", touch, ", idle=", idle,
+                                ", powerOnImminent=", powerOnImminent, '}');
+         }
+     };
+@@ -602,8 +599,6 @@ private:
+     ftl::Optional<scheduler::OneShotTimer> mIdleTimer;
+     std::atomic<bool> mIdleTimerStarted = false;
+ 
+-    Fps mIdleFps = 60_Hz;
+-
+     // Returns the range of supported frame rates.
+     FpsRange getSupportedFrameRateRangeLocked() const REQUIRES(mLock);
+ };
+diff --git a/services/surfaceflinger/Scheduler/Scheduler.cpp b/services/surfaceflinger/Scheduler/Scheduler.cpp
+index bec722d..16266c6 100644
+--- a/services/surfaceflinger/Scheduler/Scheduler.cpp
++++ b/services/surfaceflinger/Scheduler/Scheduler.cpp
+@@ -78,7 +78,6 @@ Scheduler::~Scheduler() {
+     // Stop timers and wait for their threads to exit.
+     mDisplayPowerTimer.reset();
+     mTouchTimer.reset();
+-    mHeuristicIdleTimer.reset();
+ 
+     // Stop idle timer and clear callbacks, as the RefreshRateSelector may outlive the Scheduler.
+     demotePacesetterDisplay({.toggleIdleTimer = true});
+@@ -780,9 +779,6 @@ void Scheduler::onTouchHint() {
+         mTouchTimer->reset();
+         pacesetterSelectorPtr()->resetKernelIdleTimer();
+     }
+-    if (mHeuristicIdleTimer) {
+-        mHeuristicIdleTimer->reset();
+-    }
+ }
+ 
+ void Scheduler::setDisplayPowerMode(PhysicalDisplayId id, hal::PowerMode powerMode) {
+@@ -873,11 +869,6 @@ void Scheduler::idleTimerCallback(TimerState state) {
+     SFTRACE_INT("ExpiredIdleTimer", static_cast<int>(state));
+ }
+ 
+-void Scheduler::heuristicIdleTimerCallback(TimerState state) {
+-    applyPolicy(&Policy::heuristicIdleTimer, state);
+-    ALOGV("%s: TimerState %d", __func__, static_cast<int>(state));
+-}
+-
+ void Scheduler::touchTimerCallback(TimerState state) {
+     const TouchState touch = state == TimerState::Reset ? TouchState::Active : TouchState::Inactive;
+     // Touch event will boost the refresh rate to performance.
+@@ -1022,13 +1013,6 @@ std::shared_ptr<VsyncSchedule> Scheduler::promotePacesetterDisplayLocked(
+             pacesetter.selectorPtr->startIdleTimer();
+         }
+ 
+-        mHeuristicIdleTimer.emplace(
+-                "heuristicIdleTimer",
+-                std::max(HEURISTIC_TIMEOUT, pacesetter.selectorPtr->getIdleTimerTimeout()),
+-                [this] { heuristicIdleTimerCallback(TimerState::Reset); },
+-                [this] { heuristicIdleTimerCallback(TimerState::Expired); });
+-        mHeuristicIdleTimer->start();
+-
+         newVsyncSchedulePtr = pacesetter.schedulePtr;
+ 
+         constexpr bool kForce = true;
+@@ -1272,8 +1256,7 @@ GlobalSignals Scheduler::makeGlobalSignals() const {
+ 
+     return {.touch = mTouchTimer && mPolicy.touch == TouchState::Active,
+             .idle = mPolicy.idleTimer == TimerState::Expired,
+-            .powerOnImminent = powerOnImminent,
+-            .heuristicIdle = mPolicy.heuristicIdleTimer == TimerState::Expired};
++            .powerOnImminent = powerOnImminent};
+ }
+ 
+ FrameRateMode Scheduler::getPreferredDisplayMode() {
+diff --git a/services/surfaceflinger/Scheduler/Scheduler.h b/services/surfaceflinger/Scheduler/Scheduler.h
+index fdff815..694856e 100644
+--- a/services/surfaceflinger/Scheduler/Scheduler.h
++++ b/services/surfaceflinger/Scheduler/Scheduler.h
+@@ -377,7 +377,6 @@ private:
+     void kernelIdleTimerCallback(TimerState) EXCLUDES(mDisplayLock);
+     void idleTimerCallback(TimerState);
+     void touchTimerCallback(TimerState);
+-    void heuristicIdleTimerCallback(TimerState);
+     void displayPowerTimerCallback(TimerState);
+ 
+     // VsyncSchedule delegate.
+@@ -504,9 +503,6 @@ private:
+     ftl::Optional<OneShotTimer> mTouchTimer;
+     // Timer used to monitor display power mode.
+     ftl::Optional<OneShotTimer> mDisplayPowerTimer;
+-    // Timer used to enter idle refresh rate in heuristic layers.
+-    std::optional<OneShotTimer> mHeuristicIdleTimer;
+-    static constexpr std::chrono::milliseconds HEURISTIC_TIMEOUT = 3000ms;
+ 
+     // Injected delay prior to compositing, for simulating jank.
+     float mPacesetterFrameDurationFractionToSkip GUARDED_BY(kMainThreadContext) = 0.f;
+@@ -592,7 +588,6 @@ private:
+         // Policy for choosing the display mode.
+         LayerHistory::Summary contentRequirements;
+         TimerState idleTimer = TimerState::Reset;
+-        TimerState heuristicIdleTimer = TimerState::Reset;
+         TouchState touch = TouchState::Inactive;
+         TimerState displayPowerTimer = TimerState::Expired;
+         hal::PowerMode displayPowerMode = hal::PowerMode::ON;
+-- 
+2.39.5
+

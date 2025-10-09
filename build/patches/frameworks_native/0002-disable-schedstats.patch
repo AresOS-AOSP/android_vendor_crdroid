@@ -1,0 +1,27 @@
+From 8c52d1792ce4f6c4cfc796bd104155f2f5b63857 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Fri, 14 Feb 2025 11:55:32 +0800
+Subject: [PATCH 2/8] disable schedstats
+
+Change-Id: I5d1eef7a493451afc9f75df274ec4aed8e8df87c
+Signed-off-by: rmp22 <195054967+rmp22@users.noreply.github.com>
+---
+ cmds/atrace/atrace.rc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmds/atrace/atrace.rc b/cmds/atrace/atrace.rc
+index 316f04c..412987c 100644
+--- a/cmds/atrace/atrace.rc
++++ b/cmds/atrace/atrace.rc
+@@ -7,7 +7,7 @@ on late-init
+     chmod 0222 /sys/kernel/tracing/trace_marker
+ 
+ # Scheduler tracepoints require schedstats=enable
+-    write /proc/sys/kernel/sched_schedstats 1
++    write /proc/sys/kernel/sched_schedstats 0
+ 
+ # Grant unix world read/write permissions to kernel tracepoints.
+ # Access control to these files is now entirely in selinux policy.
+-- 
+2.39.5
+

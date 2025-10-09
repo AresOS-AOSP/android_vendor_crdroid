@@ -1,0 +1,62 @@
+From c986dd1a2aacfe3ac0fd5c7927691376140f7b3b Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Sat, 27 Sep 2025 16:57:59 +0800
+Subject: [PATCH 6/8] adding scroll optimizer port hooks
+
+Change-Id: Id258e90ed1827cb4e0b844c2e7baa1e79bce1c67
+Signed-off-by: rmp22 <195054967+rmp22@users.noreply.github.com>
+---
+ libs/gui/BLASTBufferQueue.cpp           | 2 ++
+ libs/gui/include/gui/BLASTBufferQueue.h | 9 +++++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/libs/gui/BLASTBufferQueue.cpp b/libs/gui/BLASTBufferQueue.cpp
+index 5b0f21d..a372673 100644
+--- a/libs/gui/BLASTBufferQueue.cpp
++++ b/libs/gui/BLASTBufferQueue.cpp
+@@ -530,6 +530,7 @@ void BLASTBufferQueue::releaseBuffer(const ReleaseCallbackId& callbackId,
+         return;
+     }
+     mNumAcquired--;
++    mQtiNumUndequeued++;
+     BBQ_TRACE("frame=%" PRIu64, callbackId.framenumber);
+     BQA_LOGV("released %s", callbackId.to_string().c_str());
+     mBufferItemConsumer->releaseBuffer(it->second, releaseFence);
+@@ -849,6 +850,7 @@ void BLASTBufferQueue::onFrameReplaced(const BufferItem& item) {
+ void BLASTBufferQueue::onFrameDequeued(const uint64_t bufferId) {
+     std::lock_guard _lock{mTimestampMutex};
+     mDequeueTimestamps.emplace_or_replace(bufferId, systemTime());
++    mQtiNumUndequeued--;
+ };
+ 
+ void BLASTBufferQueue::onFrameCancelled(const uint64_t bufferId) {
+diff --git a/libs/gui/include/gui/BLASTBufferQueue.h b/libs/gui/include/gui/BLASTBufferQueue.h
+index c69b0a7..343746a 100644
+--- a/libs/gui/include/gui/BLASTBufferQueue.h
++++ b/libs/gui/include/gui/BLASTBufferQueue.h
+@@ -102,6 +102,14 @@ public:
+     sp<Surface> getSurface(bool includeSurfaceControlHandle);
+     bool isSameSurfaceControl(const sp<SurfaceControl>& surfaceControl) const;
+ 
++    void qtiSetUndequeuedBufferCount(int count) {
++        mQtiNumUndequeued = count;
++    }
++
++    int qtiGetUndequeuedBufferCount() const {
++        return mQtiNumUndequeued;
++    }
++
+     void onFrameReplaced(const BufferItem& item) override;
+     void onFrameAvailable(const BufferItem& item) override;
+     void onFrameDequeued(const uint64_t) override;
+@@ -206,6 +214,7 @@ private:
+     // BufferQueue internally allows 1 more than
+     // the max to be acquired
+     int32_t mMaxAcquiredBuffers GUARDED_BY(mMutex) = 1;
++    int mQtiNumUndequeued = 0;
+     int32_t mNumFrameAvailable GUARDED_BY(mMutex) = 0;
+     int32_t mNumAcquired GUARDED_BY(mMutex) = 0;
+ 
+-- 
+2.39.5
+

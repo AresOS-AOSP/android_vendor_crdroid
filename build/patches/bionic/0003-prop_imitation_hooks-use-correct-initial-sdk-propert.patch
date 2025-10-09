@@ -1,0 +1,26 @@
+From f3b3b46ae2fd096589c60ef5378d655475ef347d Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Thu, 22 May 2025 09:09:33 +0800
+Subject: [PATCH 3/4] prop_imitation_hooks: use correct initial sdk property
+
+Change-Id: Ic3ac47014029502b9ac59257133ce2b3f4d4b7fd
+---
+ libc/system_properties/prop_imitation_hooks.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libc/system_properties/prop_imitation_hooks.cpp b/libc/system_properties/prop_imitation_hooks.cpp
+index 6791fdb..c78b211 100644
+--- a/libc/system_properties/prop_imitation_hooks.cpp
++++ b/libc/system_properties/prop_imitation_hooks.cpp
+@@ -12,7 +12,7 @@
+ #define GMS_UNSTABLE "com.google.android.gms.unstable"
+ 
+ #define PROP_FIRST_API_LEVEL "ro.product.first_api_level"
+-#define PROP_PIH_FIRST_API_LEVEL "persist.sys.pihooks.first_api_level"
++#define PROP_PIH_FIRST_API_LEVEL "persist.sys.pihooks_DEVICE_INITIAL_SDK_INT"
+ 
+ void PropImitationHooks::OnFind(const char** name) {
+   if (getprogname() == nullptr || strcmp(getprogname(), GMS_UNSTABLE) != 0) {
+-- 
+2.39.5
+

@@ -1,0 +1,27 @@
+From fe4796d5e529cd38ea69c195b7ca403d2ec9fcfd Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Sat, 8 Nov 2025 13:14:23 +0000
+Subject: [PATCH 4/4] system_properties: Rename props that are detectable [5/5]
+
+Change-Id: Ie427ec78690b914f5da4f0d6e97a436537d14b6f
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ libc/system_properties/prop_imitation_hooks.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libc/system_properties/prop_imitation_hooks.cpp b/libc/system_properties/prop_imitation_hooks.cpp
+index c78b211..fa4db40 100644
+--- a/libc/system_properties/prop_imitation_hooks.cpp
++++ b/libc/system_properties/prop_imitation_hooks.cpp
+@@ -12,7 +12,7 @@
+ #define GMS_UNSTABLE "com.google.android.gms.unstable"
+ 
+ #define PROP_FIRST_API_LEVEL "ro.product.first_api_level"
+-#define PROP_PIH_FIRST_API_LEVEL "persist.sys.pihooks_DEVICE_INITIAL_SDK_INT"
++#define PROP_PIH_FIRST_API_LEVEL "persist.sys.phk_DEVICE_INITIAL_SDK_INT"
+ 
+ void PropImitationHooks::OnFind(const char** name) {
+   if (getprogname() == nullptr || strcmp(getprogname(), GMS_UNSTABLE) != 0) {
+-- 
+2.39.5
+

@@ -1,0 +1,37 @@
+From 73f642645a2ba5cf16bc871aef5351fa8bc5c6a8 Mon Sep 17 00:00:00 2001
+From: minaripenguin <minaripenguin@users.noreply.github.com>
+Date: Tue, 29 Oct 2024 18:05:36 +0800
+Subject: [PATCH 2/3] build: Add pihook sysprops
+
+Signed-off-by: minaripenguin <minaripenguin@users.noreply.github.com>
+---
+ scripts/gen_build_prop.py | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/scripts/gen_build_prop.py b/scripts/gen_build_prop.py
+index 87c3494..8ca5ba0 100644
+--- a/scripts/gen_build_prop.py
++++ b/scripts/gen_build_prop.py
+@@ -119,6 +119,9 @@ def parse_args():
+   if config["BuildNumber"].startswith("eng."):
+     config["BuildNumber"] = config["DateUtc"]
+ 
++  config["PihooksGmsFp"] = ""
++  config["PihooksGmsModel"] = ""
++
+   override_config(config)
+ 
+   append_additional_system_props(args)
+@@ -249,6 +252,9 @@ def generate_build_info(args):
+   print(f"ro.lineage.device={config['LineageDevice']}")
+   print(f"ro.crdroid.device={config['LineageDevice']}")
+ 
++  print(f"persist.sys.pihooks_FINGERPRINT={config['PihooksGmsFp']}")
++  print(f"persist.sys.pihooks_MODEL={config['PihooksGmsModel']}")
++
+   # These values are deprecated, use "ro.product.cpu.abilist"
+   # instead (see below).
+   print(f"# ro.product.cpu.abi and ro.product.cpu.abi2 are obsolete,")
+-- 
+2.39.5
+

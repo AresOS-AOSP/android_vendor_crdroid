@@ -1,0 +1,41 @@
+From aa0209b7b834e139428cb663900c8d2e9db0dda7 Mon Sep 17 00:00:00 2001
+From: jiayongqiang <jiayongqiang@xiaomi.com>
+Date: Tue, 31 Dec 2024 14:35:18 +0800
+Subject: [PATCH 8/8] Update barrierFrameNumber as frameNumber when producerId
+ changed.
+
+If producerId changed, it means that the BBQ has recreated, so we
+need to reset the barrierFrameNumber as frameNumber, rather than
+use maximum between barrierFrameNumber and frameNumber.
+
+It can also reduce unnecessary log print of "Out of order buffers
+detected for ... "
+
+Change-Id: I604d824b8728473e974d555d46f8e330e72b881b
+Signed-off-by: jiayongqiang <jiayongqiang@xiaomi.com>
+---
+ services/surfaceflinger/FrontEnd/RequestedLayerState.cpp | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/services/surfaceflinger/FrontEnd/RequestedLayerState.cpp b/services/surfaceflinger/FrontEnd/RequestedLayerState.cpp
+index 621fd6c..c9948d8 100644
+--- a/services/surfaceflinger/FrontEnd/RequestedLayerState.cpp
++++ b/services/surfaceflinger/FrontEnd/RequestedLayerState.cpp
+@@ -226,9 +226,12 @@ void RequestedLayerState::merge(const ResolvedComposerState& resolvedComposerSta
+                 TransactionTraceWriter::getInstance().invoke("out_of_order_buffers_",
+                                                              /*overwrite=*/false);
+             }
+-
++            // If producerId changed, it means that the BBQ has recreated, so we need to
++            // reset the barrierFrameNumber as frameNumber.
++            barrierFrameNumber = barrierProducerId < bufferData->producerId
++                    ? bufferData->frameNumber
++                    : std::max(bufferData->frameNumber, barrierFrameNumber);
+             barrierProducerId = std::max(bufferData->producerId, barrierProducerId);
+-            barrierFrameNumber = std::max(bufferData->frameNumber, barrierFrameNumber);
+         }
+ 
+         const bool newBufferFormatOpaque = LayerSnapshot::isOpaqueFormat(
+-- 
+2.39.5
+

@@ -1,0 +1,29 @@
+From 494970843a9280652204ddf43369688c7790f1c4 Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Sat, 8 Nov 2025 13:11:36 +0000
+Subject: [PATCH 3/3] build: Rename props that are detectable [4/5]
+
+Change-Id: I5ded10b9a7ecbcc141ee711cb3823e5db1b9a89c
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ scripts/gen_build_prop.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/gen_build_prop.py b/scripts/gen_build_prop.py
+index 8ca5ba0..2dd01b9 100644
+--- a/scripts/gen_build_prop.py
++++ b/scripts/gen_build_prop.py
+@@ -252,8 +252,8 @@ def generate_build_info(args):
+   print(f"ro.lineage.device={config['LineageDevice']}")
+   print(f"ro.crdroid.device={config['LineageDevice']}")
+ 
+-  print(f"persist.sys.pihooks_FINGERPRINT={config['PihooksGmsFp']}")
+-  print(f"persist.sys.pihooks_MODEL={config['PihooksGmsModel']}")
++  print(f"persist.sys.phk_FINGERPRINT={config['PihooksGmsFp']}")
++  print(f"persist.sys.phk_MODEL={config['PihooksGmsModel']}")
+ 
+   # These values are deprecated, use "ro.product.cpu.abilist"
+   # instead (see below).
+-- 
+2.39.5
+

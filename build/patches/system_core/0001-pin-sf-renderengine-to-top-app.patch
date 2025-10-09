@@ -1,0 +1,36 @@
+From 85894362bbad99be316b17364580f4828b9e4744 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Tue, 19 Aug 2025 06:39:23 +0800
+Subject: [PATCH 1/2] pin sf/renderengine to top-app
+
+Change-Id: If9e8b567f0b41e2dcb9b50e2728f8567fbdb2937
+Signed-off-by: rmp22 <195054967+rmp22@users.noreply.github.com>
+---
+ libprocessgroup/profiles/task_profiles.json | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libprocessgroup/profiles/task_profiles.json b/libprocessgroup/profiles/task_profiles.json
+index 42cdb91..a294aa0 100644
+--- a/libprocessgroup/profiles/task_profiles.json
++++ b/libprocessgroup/profiles/task_profiles.json
+@@ -570,7 +570,7 @@
+           "Params":
+           {
+             "Controller": "cpuset",
+-            "Path": "system-background"
++            "Path": "top-app"
+           }
+         }
+       ]
+@@ -583,7 +583,7 @@
+           "Params":
+           {
+             "Controller": "cpuset",
+-            "Path": "system-background"
++            "Path": "top-app"
+           }
+         }
+       ]
+-- 
+2.39.5
+

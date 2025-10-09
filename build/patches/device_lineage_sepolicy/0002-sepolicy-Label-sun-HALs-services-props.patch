@@ -1,0 +1,49 @@
+From baa444fe0113132ee8085632ad3a1706769780ee Mon Sep 17 00:00:00 2001
+From: cjh1249131356 <cjh1249131356@gmail.com>
+Date: Wed, 4 Jun 2025 18:57:56 +0200
+Subject: [PATCH 2/3] sepolicy: Label sun HALs/services/props
+
+Change-Id: I3e8a39225461bb1d1eddb3f5ca13ae6960cb02e4
+Signed-off-by: cjh1249131356 <cjh1249131356@gmail.com>
+---
+ common/private/service.te       | 3 +++
+ common/private/service_contexts | 3 +++
+ common/private/system_server.te | 3 +++
+ 3 files changed, 9 insertions(+)
+
+diff --git a/common/private/service.te b/common/private/service.te
+index 2574098..bcb45af 100644
+--- a/common/private/service.te
++++ b/common/private/service.te
+@@ -13,3 +13,6 @@ type linearmotor_vibrator_service, system_api_service, system_server_service, se
+ 
+ # Freeform
+ type lmo_freeform_service, system_api_service, system_server_service, service_manager_type;
++
++# Refresh Rate Manager
++type refresh_rate_manager_service, system_api_service, system_server_service, service_manager_type;
+diff --git a/common/private/service_contexts b/common/private/service_contexts
+index 9815940..ced8734 100644
+--- a/common/private/service_contexts
++++ b/common/private/service_contexts
+@@ -14,3 +14,6 @@ linearmotor                               u:object_r:linearmotor_vibrator_servic
+ 
+ # Freeform
+ lmo_freeform                              u:object_r:lmo_freeform_service:s0
++
++# Refresh Rate Manager
++refresh_rate_ext                          u:object_r:refresh_rate_manager_service:s0
+diff --git a/common/private/system_server.te b/common/private/system_server.te
+index 07c9d23..fc33638 100644
+--- a/common/private/system_server.te
++++ b/common/private/system_server.te
+@@ -34,3 +34,6 @@ add_service(system_server, linearmotor_vibrator_service);
+ 
+ # Freeform
+ add_service(system_server, lmo_freeform_service);
++
++# Refresh Rate Manager
++add_service(system_server, refresh_rate_manager_service);
+-- 
+2.39.5
+

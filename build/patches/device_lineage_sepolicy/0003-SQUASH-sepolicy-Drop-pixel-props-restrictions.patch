@@ -1,0 +1,38 @@
+From 72532ccf9382f3e255806727a9c891e1f649ce9a Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Sat, 8 Nov 2025 11:09:01 +0000
+Subject: [PATCH 3/3] [SQUASH] sepolicy: Drop pixel props restrictions
+
+Revert "sepolicy: Restrict more pixel props"
+
+This reverts commit c182817c70ccc2ea9e4b85812766f14720817b12.
+
+Revert "sepolicy: Restrict pixel props usage"
+
+This reverts commit d9b4b2f6a70f54c9c5484e4afc2a77860caea27d.
+
+Change-Id: I53e7794ebc88aa8a27d47f8a2aa2f096cf3d5c15
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ common/private/property_contexts | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/common/private/property_contexts b/common/private/property_contexts
+index 7182ae9..66975ac 100644
+--- a/common/private/property_contexts
++++ b/common/private/property_contexts
+@@ -32,11 +32,6 @@ ro.lineage.display.version             u:object_r:custom_version_prop:s0
+ ro.lineage.build.version               u:object_r:custom_version_prop:s0
+ ro.lineage.releasetype                 u:object_r:custom_version_prop:s0
+ 
+-# Pixel props
+-persist.sys.spoof.                     u:object_r:custom_version_prop:s0
+-persist.sys.pihooks.                   u:object_r:custom_version_prop:s0
+-persist.sys.pixelprops.                u:object_r:custom_version_prop:s0
+-
+ # Recovery battery
+ ro.recovery.batteryless                u:object_r:recovery_config_prop:s0 exact bool
+ 
+-- 
+2.39.5
+

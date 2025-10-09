@@ -1,0 +1,1191 @@
+From 9167c3a23744e8f50bad2efc5a0dfdccd10073c9 Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Sat, 8 Nov 2025 21:11:01 +0000
+Subject: [PATCH] [SQUASH] ThemePicker: Drop lockscreen clock font
+ customization
+
+Revert "ThemePicker: Make lockscreen custom font section dynamic"
+
+This reverts commit 841023bb78ef56c86d5686a924326ac6bf045167.
+
+Revert "ThemePicker: Improve clock font preview"
+
+This reverts commit 04b7e3ca948cf87a8ae305a49d9338f5fc681c46.
+
+Revert "ThemePicker: Add lockscreen clock font customization"
+
+This reverts commit c0d25d950d64de3b3db03cefaf8b19b26e207793.
+
+Change-Id: Ib62f2d705ec55cb65dba5e9f66a310570e789242
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ res/layout/fragment_lockfont_picker.xml       |  85 --------
+ res/layout/lockfont_preview_card.xml          |  55 -----
+ res/layout/lockfont_section_view.xml          |  49 -----
+ res/layout/preview_card_lockfont_content.xml  |  37 ----
+ res/values/strings.xml                        |   3 -
+ .../model/ResourceConstants.java              |   2 -
+ .../model/lockfont/LockFontManager.java       | 160 --------------
+ .../model/lockfont/LockFontOption.java        | 136 ------------
+ .../lockfont/LockFontOptionProvider.java      | 108 ---------
+ .../lockfont/LockFontSectionController.java   | 178 ---------------
+ .../module/DefaultCustomizationSections.java  |   7 -
+ .../picker/lockfont/LockFontFragment.java     | 205 ------------------
+ .../picker/lockfont/LockFontSectionView.java  |  12 -
+ 13 files changed, 1037 deletions(-)
+ delete mode 100644 res/layout/fragment_lockfont_picker.xml
+ delete mode 100644 res/layout/lockfont_preview_card.xml
+ delete mode 100644 res/layout/lockfont_section_view.xml
+ delete mode 100644 res/layout/preview_card_lockfont_content.xml
+ delete mode 100644 src/com/android/customization/model/lockfont/LockFontManager.java
+ delete mode 100644 src/com/android/customization/model/lockfont/LockFontOption.java
+ delete mode 100644 src/com/android/customization/model/lockfont/LockFontOptionProvider.java
+ delete mode 100644 src/com/android/customization/model/lockfont/LockFontSectionController.java
+ delete mode 100644 src/com/android/customization/picker/lockfont/LockFontFragment.java
+ delete mode 100644 src/com/android/customization/picker/lockfont/LockFontSectionView.java
+
+diff --git a/res/layout/fragment_lockfont_picker.xml b/res/layout/fragment_lockfont_picker.xml
+deleted file mode 100644
+index 00cfaa9..0000000
+--- a/res/layout/fragment_lockfont_picker.xml
++++ /dev/null
+@@ -1,85 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!--
+-     Copyright (C) 2019 The Android Open Source Project
+-
+-     Licensed under the Apache License, Version 2.0 (the "License");
+-     you may not use this file except in compliance with the License.
+-     You may obtain a copy of the License at
+-
+-          http://www.apache.org/licenses/LICENSE-2.0
+-
+-     Unless required by applicable law or agreed to in writing, software
+-     distributed under the License is distributed on an "AS IS" BASIS,
+-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-     See the License for the specific language governing permissions and
+-     limitations under the License.
+--->
+-<LinearLayout
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:app="http://schemas.android.com/apk/res-auto"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:orientation="vertical">
+-    <include layout="@layout/section_header"/>
+-
+-    <FrameLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent">
+-
+-        <androidx.constraintlayout.widget.ConstraintLayout
+-            android:id="@+id/content_section"
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent">
+-
+-            <FrameLayout
+-                android:id="@+id/preview_card_container"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:clipToPadding="false"
+-                android:paddingTop="@dimen/preview_page_top_margin"
+-                android:paddingBottom="@dimen/preview_page_bottom_margin"
+-                app:layout_constrainedHeight="true"
+-                app:layout_constraintBottom_toTopOf="@+id/options_container"
+-                app:layout_constraintEnd_toEndOf="parent"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintTop_toTopOf="parent">
+-
+-                <include layout="@layout/lockfont_preview_card" />
+-            </FrameLayout>
+-
+-            <androidx.recyclerview.widget.RecyclerView
+-                android:id="@+id/options_container"
+-                android:layout_width="match_parent"
+-                android:layout_height="@dimen/options_container_height"
+-                android:layout_marginBottom="@dimen/grid_options_container_bottom_margin"
+-                android:paddingHorizontal="@dimen/grid_options_container_horizontal_margin"
+-                android:clipToPadding="false"
+-                app:layout_constraintBottom_toBottomOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent"
+-                app:layout_constraintStart_toStartOf="parent" />
+-        </androidx.constraintlayout.widget.ConstraintLayout>
+-
+-        <androidx.core.widget.ContentLoadingProgressBar
+-            android:id="@+id/loading_indicator"
+-            style="@android:style/Widget.DeviceDefault.ProgressBar"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:layout_marginTop="200dp"
+-            android:layout_gravity="center_horizontal|top"
+-            android:indeterminate="true"/>
+-        <FrameLayout
+-            android:id="@+id/error_section"
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent"
+-            android:visibility="gone">
+-            <TextView
+-                android:id="@+id/error_message"
+-                style="@style/TitleTextAppearance"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:layout_gravity="center"
+-                android:gravity="center"
+-                android:text="@string/something_went_wrong"/>
+-        </FrameLayout>
+-    </FrameLayout>
+-</LinearLayout>
+diff --git a/res/layout/lockfont_preview_card.xml b/res/layout/lockfont_preview_card.xml
+deleted file mode 100644
+index 48425d1..0000000
+--- a/res/layout/lockfont_preview_card.xml
++++ /dev/null
+@@ -1,55 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!--
+-     Copyright (C) 2019 The Android Open Source Project
+-
+-     Licensed under the Apache License, Version 2.0 (the "License");
+-     you may not use this file except in compliance with the License.
+-     You may obtain a copy of the License at
+-
+-          http://www.apache.org/licenses/LICENSE-2.0
+-
+-     Unless required by applicable law or agreed to in writing, software
+-     distributed under the License is distributed on an "AS IS" BASIS,
+-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-     See the License for the specific language governing permissions and
+-     limitations under the License.
+--->
+-<androidx.cardview.widget.CardView
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:id="@+id/font_preview_card"
+-    android:layout_width="250dp"
+-    android:layout_height="400dp"
+-    android:layout_marginVertical="20dp"
+-    android:layout_gravity="center"
+-    android:clipChildren="true">
+-
+-    <FrameLayout
+-        android:layout_width="match_parent"
+-        android:layout_height="match_parent">
+-
+-        <View
+-            android:id="@+id/wallpaper_dim_overlay"
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent"
+-            android:background="#26000000" />
+-
+-        <LinearLayout
+-            android:layout_width="match_parent"
+-            android:layout_height="match_parent"
+-            android:gravity="center_vertical"
+-            android:orientation="vertical">
+-
+-            <FrameLayout
+-                android:id="@+id/theme_preview_card_body_container"
+-                android:layout_width="match_parent"
+-                android:layout_height="wrap_content"
+-                android:clipChildren="false"
+-                android:importantForAccessibility="noHideDescendants">
+-
+-                <include layout="@layout/preview_card_lockfont_content" />
+-            </FrameLayout>
+-
+-        </LinearLayout>
+-    </FrameLayout>
+-
+-</androidx.cardview.widget.CardView>
+diff --git a/res/layout/lockfont_section_view.xml b/res/layout/lockfont_section_view.xml
+deleted file mode 100644
+index fed8ebe..0000000
+--- a/res/layout/lockfont_section_view.xml
++++ /dev/null
+@@ -1,49 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<com.android.customization.picker.lockfont.LockFontSectionView
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_height="wrap_content"
+-    android:layout_width="match_parent"
+-    android:background="?selectableItemBackground"
+-    android:clickable="true"
+-    android:paddingVertical="@dimen/option_section_vertical_padding"
+-    android:paddingHorizontal="@dimen/section_horizontal_padding"
+-    android:orientation="horizontal">
+-
+-    <LinearLayout
+-        android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:layout_weight="1"
+-        android:layout_gravity="center"
+-        android:orientation="vertical">
+-
+-        <TextView
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            android:text="@string/preview_name_lockfont"
+-            style="@style/SectionTitleTextStyle" />
+-
+-        <TextView
+-            android:id="@+id/font_section_description"
+-            android:layout_width="match_parent"
+-            android:layout_height="wrap_content"
+-            style="@style/SectionSubtitleTextStyle"/>
+-    </LinearLayout>
+-
+-    <FrameLayout
+-        android:id="@+id/font_section_tile"
+-        android:layout_width="@dimen/option_tile_width"
+-        android:layout_height="@dimen/option_tile_width"
+-        android:scaleType="center"
+-        android:background="@drawable/picker_section_icon_background">
+-        <TextView
+-            android:id="@+id/thumbnail_text"
+-            android:layout_width="wrap_content"
+-            android:layout_height="wrap_content"
+-            android:layout_gravity="center"
+-            android:textSize="@dimen/font_comonent_option_thumbnail_size"
+-            android:textAlignment="center"
+-            android:textColor="?android:attr/colorForeground"
+-            android:text="@string/font_component_option_thumbnail"/>
+-    </FrameLayout>
+-
+-</com.android.customization.picker.lockfont.LockFontSectionView>
+diff --git a/res/layout/preview_card_lockfont_content.xml b/res/layout/preview_card_lockfont_content.xml
+deleted file mode 100644
+index 5ab291e..0000000
+--- a/res/layout/preview_card_lockfont_content.xml
++++ /dev/null
+@@ -1,37 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!--
+-     Copyright (C) 2019 The Android Open Source Project
+-
+-     Licensed under the Apache License, Version 2.0 (the "License");
+-     you may not use this file except in compliance with the License.
+-     You may obtain a copy of the License at
+-
+-          http://www.apache.org/licenses/LICENSE-2.0
+-
+-     Unless required by applicable law or agreed to in writing, software
+-     distributed under the License is distributed on an "AS IS" BASIS,
+-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-     See the License for the specific language governing permissions and
+-     limitations under the License.
+--->
+-<LinearLayout
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:tools="http://schemas.android.com/tools"
+-    android:layout_width="match_parent"
+-    android:layout_height="match_parent"
+-    android:layout_gravity="center"
+-    android:orientation="vertical"
+-    tools:showIn="@layout/theme_preview_card">
+-    <TextClock
+-        android:id="@+id/font_card_title"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:layout_gravity="center"
+-        android:format12Hour="hh\nmm"
+-        android:format24Hour="hh\nmm"
+-        android:textSize="72sp"
+-        android:textColor="@*android:color/system_accent1_100"
+-        android:gravity="center"
+-        android:lineSpacingExtra="0dp"
+-        android:lineSpacingMultiplier="1.1" />
+-</LinearLayout>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 295265d..46038c6 100755
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -616,7 +616,4 @@
+     [CHAR LIMIT=128].
+     -->
+     <string name="custom_clocks_label">Custom Clocks</string>
+-
+-    <!-- Title of a page that shows the user the preview of a clock font selection [CHAR_LIMIT=20] -->
+-    <string name="preview_name_lockfont">Clock Font</string>
+ </resources>
+diff --git a/src/com/android/customization/model/ResourceConstants.java b/src/com/android/customization/model/ResourceConstants.java
+index bfaafd2..bc77821 100644
+--- a/src/com/android/customization/model/ResourceConstants.java
++++ b/src/com/android/customization/model/ResourceConstants.java
+@@ -56,7 +56,6 @@ public interface ResourceConstants {
+     String OVERLAY_CATEGORY_SYSTEM_PALETTE = "android.theme.customization.system_palette";
+     String OVERLAY_CATEGORY_THEME_STYLE = "android.theme.customization.theme_style";
+     String OVERLAY_CATEGORY_FONT = "android.theme.customization.font";
+-    String OVERLAY_CATEGORY_LOCKFONT = "android.theme.customization.lockscreen_clock_font";
+     String OVERLAY_CATEGORY_SHAPE = "android.theme.customization.adaptive_icon_shape";
+     String OVERLAY_CATEGORY_ICON_ANDROID = "android.theme.customization.icon_pack.android";
+     String OVERLAY_CATEGORY_ICON_SYSUI = "android.theme.customization.icon_pack.systemui";
+@@ -71,7 +70,6 @@ public interface ResourceConstants {
+      */
+     String THEME_SETTING = Secure.THEME_CUSTOMIZATION_OVERLAY_PACKAGES;
+     String CONFIG_BODY_FONT_FAMILY = "config_bodyFontFamily";
+-    String CONFIG_CLOCK_FONT_FAMILY = "config_clockFontFamily";
+     String CONFIG_HEADLINE_FONT_FAMILY = "config_headlineFontFamily";
+     String[] ICONS_FOR_PREVIEW = {
+             "ic_wifi_signal_3",
+diff --git a/src/com/android/customization/model/lockfont/LockFontManager.java b/src/com/android/customization/model/lockfont/LockFontManager.java
+deleted file mode 100644
+index 8a1e087..0000000
+--- a/src/com/android/customization/model/lockfont/LockFontManager.java
++++ /dev/null
+@@ -1,160 +0,0 @@
+-/*
+- * Copyright (C) 2019 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.android.customization.model.lockfont;
+-
+-import static com.android.customization.model.ResourceConstants.ANDROID_PACKAGE;
+-import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_LOCKFONT;
+-
+-import android.app.AlertDialog;
+-import android.content.Context;
+-import android.content.ContentResolver;
+-import android.os.Bundle;
+-import android.os.UserHandle;
+-import android.provider.Settings;
+-import android.text.TextUtils;
+-import android.util.Log;
+-import android.widget.Toast;
+-
+-import androidx.annotation.Nullable;
+-
+-import com.android.customization.model.CustomizationManager;
+-import com.android.customization.model.theme.OverlayManagerCompat;
+-
+-import java.util.Map;
+-import java.util.List;
+-
+-import org.json.JSONException;
+-import org.json.JSONObject;
+-
+-public class LockFontManager implements CustomizationManager<LockFontOption> {
+-
+-    private static LockFontManager sLockFontOptionManager;
+-    private Context mContext;
+-    private LockFontOption mActiveOption;
+-    private OverlayManagerCompat mOverlayManager;
+-    private LockFontOptionProvider mProvider;
+-    private static final String TAG = "LockFontManager";
+-    private static final String KEY_STATE_CURRENT_SELECTION = "LockFontManager.currentSelection";
+-
+-    LockFontManager(Context context, OverlayManagerCompat overlayManager, LockFontOptionProvider provider) {
+-        mContext = context;
+-        mProvider = provider;
+-        mOverlayManager = overlayManager;
+-    }
+-
+-    @Override
+-    public boolean isAvailable() {
+-        return mOverlayManager.isAvailable();
+-    }
+-
+-    @Override
+-    public void apply(LockFontOption option, @Nullable Callback callback) {
+-        if (!persistOverlay(option)) {
+-            Toast failed = Toast.makeText(mContext, "Failed to apply lockscreen font, reboot to try again.", Toast.LENGTH_SHORT);
+-            failed.show();
+-            if (callback != null) {
+-                callback.onError(null);
+-            }
+-            return;
+-        }
+-        if (option.getPackageName() == null) {
+-            if (mActiveOption.getPackageName() == null) return;
+-            for (String overlay : mOverlayManager.getOverlayPackagesForCategory(
+-                    OVERLAY_CATEGORY_LOCKFONT, UserHandle.myUserId(), ANDROID_PACKAGE)) {
+-                mOverlayManager.disableOverlay(overlay, UserHandle.myUserId());
+-            }
+-        } else {
+-            mOverlayManager.setEnabledExclusiveInCategory(option.getPackageName(), UserHandle.myUserId());
+-        }
+-        if (callback != null) {
+-            callback.onSuccess();
+-        }
+-        mActiveOption = option;
+-    }
+-
+-    @Override
+-    public void fetchOptions(OptionsFetchedListener<LockFontOption> callback, boolean reload) {
+-        List<LockFontOption> options = mProvider.getOptions(reload);
+-        for (LockFontOption option : options) {
+-            if (isActive(option)) {
+-                mActiveOption = option;
+-                break;
+-            }
+-        }
+-        callback.onOptionsLoaded(options);
+-    }
+-
+-    public OverlayManagerCompat getOverlayManager() {
+-        return mOverlayManager;
+-    }
+-
+-    public boolean isActive(LockFontOption option) {
+-        String enabledPkg = mOverlayManager.getEnabledPackageName(ANDROID_PACKAGE, OVERLAY_CATEGORY_LOCKFONT);
+-        if (enabledPkg != null) {
+-            return enabledPkg.equals(option.getPackageName());
+-        } else {
+-            return option.getPackageName() == null;
+-        }
+-    }
+-
+-    public void restartSystemUI() {
+-        ContentResolver resolver = mContext.getContentResolver();
+-        int currentValue = Settings.System.getInt(resolver, "system_ui_restart", 0);
+-        int newValue = (currentValue == 0) ? 1 : 0;
+-        Settings.System.putInt(resolver, "system_ui_restart", newValue);
+-    }
+-
+-    private boolean persistOverlay(LockFontOption toPersist) {
+-        String value = Settings.Secure.getStringForUser(mContext.getContentResolver(),
+-                Settings.Secure.THEME_CUSTOMIZATION_OVERLAY_PACKAGES, UserHandle.myUserId());
+-        JSONObject json;
+-        if (value == null) {
+-            json = new JSONObject();
+-        } else {
+-            try {
+-                json = new JSONObject(value);
+-            } catch (JSONException e) {
+-                Log.e(TAG, "Error parsing current settings value:\n" + e.getMessage());
+-                return false;
+-            }
+-        }
+-        // removing all currently enabled overlays from the json
+-        json.remove(OVERLAY_CATEGORY_LOCKFONT);
+-        // adding the new ones
+-        try {
+-            json.put(OVERLAY_CATEGORY_LOCKFONT, toPersist.getPackageName());
+-        } catch (JSONException e) {
+-            Log.e(TAG, "Error adding new settings value:\n" + e.getMessage());
+-            return false;
+-        }
+-        // updating the setting
+-        Settings.Secure.putStringForUser(mContext.getContentResolver(),
+-                Settings.Secure.THEME_CUSTOMIZATION_OVERLAY_PACKAGES,
+-                json.toString(), UserHandle.myUserId());
+-        // TODO: remove this until i find a way to rebuild keyguard blueprint views during theme changed
+-        restartSystemUI();
+-        return true;
+-    }
+-
+-    public static LockFontManager getInstance(Context context, OverlayManagerCompat overlayManager) {
+-        if (sLockFontOptionManager == null) {
+-            Context applicationContext = context.getApplicationContext();
+-            sLockFontOptionManager = new LockFontManager(context, overlayManager, new LockFontOptionProvider(applicationContext, overlayManager));
+-        }
+-        return sLockFontOptionManager;
+-    }
+-
+-}
+diff --git a/src/com/android/customization/model/lockfont/LockFontOption.java b/src/com/android/customization/model/lockfont/LockFontOption.java
+deleted file mode 100644
+index cd0b86b..0000000
+--- a/src/com/android/customization/model/lockfont/LockFontOption.java
++++ /dev/null
+@@ -1,136 +0,0 @@
+-/*
+- * Copyright (C) 2019 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.android.customization.model.lockfont;
+-
+-import android.app.WallpaperManager;
+-import android.content.Context;
+-import android.content.res.ColorStateList;
+-import android.content.res.Resources;
+-import android.graphics.Bitmap;
+-import android.graphics.Color;
+-import android.graphics.drawable.BitmapDrawable;
+-import android.graphics.drawable.Drawable;
+-import android.graphics.PorterDuff.Mode;
+-import android.graphics.Typeface;
+-import android.view.LayoutInflater;
+-import android.view.View;
+-import android.view.ViewGroup;
+-import android.widget.ImageView;
+-import android.widget.TextView;
+-
+-import androidx.cardview.widget.CardView;
+-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
+-
+-import com.android.customization.model.CustomizationManager;
+-import com.android.customization.model.CustomizationOption;
+-import com.android.customization.model.ResourceConstants;
+-import com.android.customization.model.theme.OverlayManagerCompat;
+-import com.android.themepicker.R;
+-import com.android.wallpaper.util.ResourceUtils;
+-
+-import java.util.ArrayList;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Objects;
+-
+-public class LockFontOption implements CustomizationOption<LockFontOption> {
+-
+-    private final Typeface mHeadlineFont;
+-    private final Typeface mBodyFont;
+-    private String mTitle;
+-    private String mOverlayPackage;
+-
+-    public LockFontOption(String overlayPackage, String label, Typeface headlineFont, Typeface bodyFont) {
+-        mTitle = label;
+-        mHeadlineFont = headlineFont;
+-        mBodyFont = bodyFont;
+-        mOverlayPackage = overlayPackage;
+-    }
+-
+-    @Override
+-    public void bindThumbnailTile(View view) {
+-        Resources res = view.getContext().getResources();
+-        TextView thumbnailText = view.findViewById(R.id.thumbnail_text);
+-
+-        thumbnailText.setTypeface(mHeadlineFont);
+-        
+-        int colorFilter = ResourceUtils.getColorAttr(view.getContext(),
+-                        view.isActivated() 
+-                        ? (view.getId() == R.id.font_section_tile 
+-                                ? android.R.attr.textColorPrimary 
+-                                : android.R.attr.textColorPrimaryInverse)
+-                        : android.R.attr.textColorTertiary);
+-        
+-        thumbnailText.setTextColor(colorFilter);
+-        if (view.isActivated()) {
+-            view.setBackgroundTintList(ColorStateList.valueOf(
+-                ResourceUtils.getColorAttr(view.getContext(), android.R.attr.colorAccent)));
+-        } else {
+-            view.setBackgroundTintList(null);
+-        }
+-
+-        view.setContentDescription(mTitle);
+-    }
+-
+-
+-    @Override
+-    public boolean isActive(CustomizationManager<LockFontOption> manager) {
+-        LockFontManager fontManager = (LockFontManager) manager;
+-        return fontManager.isActive(this);
+-    }
+-
+-    @Override
+-    public int getLayoutResId() {
+-        return R.layout.theme_font_option;
+-    }
+-
+-    @Override
+-    public String getTitle() {
+-        return mTitle;
+-    }
+-
+-    public String getPackageName() {
+-        return mOverlayPackage;
+-    }
+-
+-    public void bindPreview(ViewGroup container) {
+-        ViewGroup cardBody = container.findViewById(R.id.theme_preview_card_body_container);
+-        CardView cardView = container.findViewById(R.id.font_preview_card);
+-
+-        if (cardBody.getChildCount() == 0) {
+-            LayoutInflater.from(container.getContext()).inflate(
+-                    R.layout.preview_card_lockfont_content, cardBody, true);
+-        }
+-
+-        WallpaperManager wallpaperManager = WallpaperManager.getInstance(container.getContext());
+-        Drawable wallpaperDrawable = wallpaperManager.getDrawable();
+-
+-        BitmapDrawable bitmapDrawable = (BitmapDrawable) wallpaperDrawable;
+-        Bitmap bitmap = bitmapDrawable.getBitmap();
+-
+-        RoundedBitmapDrawable roundedDrawable = RoundedBitmapDrawableFactory.create(container.getResources(), bitmap);
+-        roundedDrawable.setCornerRadius(32);
+-
+-        cardView.setBackgroundColor(Color.TRANSPARENT);
+-        cardView.setBackground(roundedDrawable);
+-
+-        TextView title = container.findViewById(R.id.font_card_title);
+-        title.setTypeface(mHeadlineFont);
+-    }
+-
+-}
+diff --git a/src/com/android/customization/model/lockfont/LockFontOptionProvider.java b/src/com/android/customization/model/lockfont/LockFontOptionProvider.java
+deleted file mode 100644
+index c536916..0000000
+--- a/src/com/android/customization/model/lockfont/LockFontOptionProvider.java
++++ /dev/null
+@@ -1,108 +0,0 @@
+-/*
+- * Copyright (C) 2019 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.android.customization.model.lockfont;
+-
+-import static com.android.customization.model.ResourceConstants.ANDROID_PACKAGE;
+-import static com.android.customization.model.ResourceConstants.CONFIG_CLOCK_FONT_FAMILY;
+-import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_LOCKFONT;
+-
+-import android.content.Context;
+-import android.content.pm.PackageManager;
+-import android.content.pm.PackageManager.NameNotFoundException;
+-import android.content.res.Resources;
+-import android.content.res.Resources.NotFoundException;
+-import android.graphics.Typeface;
+-import android.os.UserHandle;
+-import android.util.Log;
+-
+-import com.android.customization.model.ResourceConstants;
+-import com.android.customization.model.theme.OverlayManagerCompat;
+-import com.android.themepicker.R;
+-
+-import java.util.ArrayList;
+-import java.util.Collections;
+-import java.util.Comparator;
+-import java.util.HashMap;
+-import java.util.List;
+-import java.util.Map;
+-
+-public class LockFontOptionProvider {
+-
+-    private static final String TAG = "LockFontOptionProvider";
+-
+-    private Context mContext;
+-    private PackageManager mPm;
+-    private final List<String> mOverlayPackages;
+-    private final List<LockFontOption> mOptions = new ArrayList<>();
+-    private String mActiveOverlay;
+-
+-    public LockFontOptionProvider(Context context, OverlayManagerCompat manager) {
+-        mContext = context;
+-        mPm = context.getPackageManager();
+-        mOverlayPackages = new ArrayList<>();
+-        mOverlayPackages.addAll(manager.getOverlayPackagesForCategory(OVERLAY_CATEGORY_LOCKFONT,
+-                UserHandle.myUserId(), ResourceConstants.getPackagesToOverlay(mContext)));
+-        mActiveOverlay = manager.getEnabledPackageName(ANDROID_PACKAGE, OVERLAY_CATEGORY_LOCKFONT);
+-    }
+-
+-    public List<LockFontOption> getOptions(boolean reload) {
+-        if (reload) mOptions.clear();
+-        if (mOptions.isEmpty()) loadOptions();
+-        return mOptions;
+-    }
+-
+-    private void loadOptions() {
+-        addDefault();
+-        List<LockFontOption> customOptions = new ArrayList<>();
+-
+-        for (String overlayPackage : mOverlayPackages) {
+-            try {
+-                Resources overlayRes = mPm.getResourcesForApplication(overlayPackage);
+-                Typeface headlineFont = Typeface.create(
+-                        getFontFamily(overlayPackage, overlayRes, CONFIG_CLOCK_FONT_FAMILY),
+-                        Typeface.NORMAL);
+-                Typeface bodyFont = Typeface.create(
+-                        getFontFamily(overlayPackage, overlayRes, CONFIG_CLOCK_FONT_FAMILY),
+-                        Typeface.NORMAL);
+-                String label = mPm.getApplicationInfo(overlayPackage, 0).loadLabel(mPm).toString();
+-                customOptions.add(new LockFontOption(overlayPackage, label, headlineFont, bodyFont));
+-            } catch (NameNotFoundException | NotFoundException e) {
+-                Log.w(TAG, String.format("Couldn't load lockscreen font overlay %s, will skip it",
+-                        overlayPackage), e);
+-            }
+-        }
+-
+-        customOptions.sort((o1, o2) -> o1.getTitle().compareToIgnoreCase(o2.getTitle()));
+-        mOptions.addAll(customOptions);
+-    }
+-
+-    private void addDefault() {
+-        Resources system = Resources.getSystem();
+-        Typeface headlineFont = Typeface.create(system.getString(system.getIdentifier(
+-                ResourceConstants.CONFIG_CLOCK_FONT_FAMILY,"string", ANDROID_PACKAGE)),
+-                Typeface.NORMAL);
+-        Typeface bodyFont = Typeface.create(system.getString(system.getIdentifier(
+-                ResourceConstants.CONFIG_CLOCK_FONT_FAMILY,
+-                "string", ANDROID_PACKAGE)),
+-                Typeface.NORMAL);
+-        mOptions.add(new LockFontOption(null, mContext.getString(R.string.default_theme_title),
+-                headlineFont, bodyFont));
+-    }
+-
+-    private String getFontFamily(String overlayPackage, Resources overlayRes, String configName) {
+-        return overlayRes.getString(overlayRes.getIdentifier(configName, "string", overlayPackage));
+-    }
+-}
+diff --git a/src/com/android/customization/model/lockfont/LockFontSectionController.java b/src/com/android/customization/model/lockfont/LockFontSectionController.java
+deleted file mode 100644
+index fb5ca27..0000000
+--- a/src/com/android/customization/model/lockfont/LockFontSectionController.java
++++ /dev/null
+@@ -1,178 +0,0 @@
+-/*
+- * Copyright (C) 2021 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.android.customization.model.lockfont;
+-
+-import android.content.Context;
+-import android.database.ContentObserver;
+-import android.net.Uri;
+-import android.os.Handler;
+-import android.os.Looper;
+-import android.provider.Settings;
+-import android.text.TextUtils;
+-import android.util.Log;
+-import android.view.LayoutInflater;
+-import android.view.View;
+-import android.widget.TextView;
+-
+-import androidx.annotation.Nullable;
+-
+-import com.android.customization.model.CustomizationManager.Callback;
+-import com.android.customization.model.CustomizationManager.OptionsFetchedListener;
+-import com.android.customization.picker.lockfont.LockFontFragment;
+-import com.android.customization.picker.lockfont.LockFontSectionView;
+-import com.android.themepicker.R;
+-import com.android.wallpaper.model.CustomizationSectionController;
+-
+-import org.json.JSONException;
+-import org.json.JSONObject;
+-
+-import java.util.List;
+-
+-/** A {@link CustomizationSectionController} for lockscreen fonts. */
+-
+-public class LockFontSectionController implements CustomizationSectionController<LockFontSectionView> {
+-
+-    private static final String TAG = "LockFontSectionController";
+-    private static final String KEY_LOCK_SCREEN_CUSTOM_CLOCK_FACE = "lock_screen_custom_clock_face";
+-
+-    private final LockFontManager mFontOptionsManager;
+-    private final CustomizationSectionNavigationController mSectionNavigationController;
+-    private final Callback mApplyFontCallback = new Callback() {
+-        @Override
+-        public void onSuccess() {
+-        }
+-
+-        @Override
+-        public void onError(@Nullable Throwable throwable) {
+-        }
+-    };
+-
+-    public LockFontSectionController(LockFontManager fontOptionsManager,
+-            CustomizationSectionNavigationController sectionNavigationController) {
+-        mFontOptionsManager = fontOptionsManager;
+-        mSectionNavigationController = sectionNavigationController;
+-    }
+-
+-    @Override
+-    public boolean isAvailable(Context context) {
+-        return mFontOptionsManager.isAvailable();
+-    }
+-
+-    @Override
+-    public LockFontSectionView createView(Context context) {
+-        LockFontSectionView fontSectionView = (LockFontSectionView) LayoutInflater.from(context)
+-                .inflate(R.layout.lockfont_section_view, /* root= */ null);
+-
+-        TextView sectionDescription = fontSectionView.findViewById(R.id.font_section_description);
+-        View sectionTile = fontSectionView.findViewById(R.id.font_section_tile);
+-
+-        mFontOptionsManager.fetchOptions(new OptionsFetchedListener<LockFontOption>() {
+-            @Override
+-            public void onOptionsLoaded(List<LockFontOption> options) {
+-                LockFontOption activeOption = getActiveOption(options);
+-                sectionDescription.setText(activeOption.getTitle());
+-                activeOption.bindThumbnailTile(sectionTile);
+-            }
+-
+-            @Override
+-            public void onError(@Nullable Throwable throwable) {
+-                if (throwable != null) {
+-                    Log.e(TAG, "Error loading font options", throwable);
+-                }
+-                sectionDescription.setText(R.string.something_went_wrong);
+-                sectionTile.setVisibility(View.GONE);
+-            }
+-        }, /* reload= */ true);
+-
+-        fontSectionView.setOnClickListener(v -> {
+-            if (fontSectionView.isEnabled()) {
+-                mSectionNavigationController.navigateTo(
+-                        LockFontFragment.newInstance(
+-                                context.getString(R.string.preview_name_lockfont)));
+-            }
+-        });
+-
+-        updateEnabledStateFromClockFace(context, fontSectionView);
+-
+-        final Uri clockFaceUri = Settings.Secure.getUriFor(KEY_LOCK_SCREEN_CUSTOM_CLOCK_FACE);
+-        final ContentObserver observer = new ContentObserver(new Handler(Looper.getMainLooper())) {
+-            @Override
+-            public void onChange(boolean selfChange) {
+-                updateEnabledStateFromClockFace(context, fontSectionView);
+-            }
+-        };
+-
+-        context.getContentResolver().registerContentObserver(clockFaceUri, /* notifyForDescendants= */ false, observer);
+-
+-        fontSectionView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+-            @Override
+-            public void onViewAttachedToWindow(View v) {
+-                updateEnabledStateFromClockFace(context, fontSectionView);
+-            }
+-
+-            @Override
+-            public void onViewDetachedFromWindow(View v) {
+-                try {
+-                    context.getContentResolver().unregisterContentObserver(observer);
+-                } catch (Throwable t) {
+-                    Log.w(TAG, "Failed to unregister ContentObserver", t);
+-                }
+-            }
+-        });
+-
+-        return fontSectionView;
+-    }
+-
+-    private LockFontOption getActiveOption(List<LockFontOption> options) {
+-        return options.stream()
+-                .filter(option -> mFontOptionsManager.isActive(option))
+-                .findAny()
+-                // For development only, as there should always be a grid set.
+-                .orElse(options.get(0));
+-    }
+-
+-    /**
+-     * Enables the section when no custom clock is set (or clockId is DEFAULT),
+-     * otherwise disables it. This is called initially and whenever the setting changes.
+-     */
+-    private void updateEnabledStateFromClockFace(Context context, View sectionView) {
+-        String clockFaceJson = Settings.Secure.getString(
+-                context.getContentResolver(), KEY_LOCK_SCREEN_CUSTOM_CLOCK_FACE);
+-
+-        boolean enable;
+-        if (TextUtils.isEmpty(clockFaceJson)) {
+-            enable = true;
+-        } else {
+-            enable = isDefaultClock(clockFaceJson);
+-        }
+-
+-        sectionView.setEnabled(enable);
+-        sectionView.setClickable(enable);
+-        sectionView.setFocusable(enable);
+-        sectionView.setAlpha(enable ? 1f : 0.5f);
+-    }
+-
+-    private boolean isDefaultClock(String clockFaceJson) {
+-        try {
+-            JSONObject clockFace = new JSONObject(clockFaceJson);
+-            String id = clockFace.optString("clockId", "DEFAULT");
+-            return "DEFAULT".equals(id);
+-        } catch (JSONException e) {
+-            Log.w(TAG, "Failed to parse clock face JSON: " + clockFaceJson, e);
+-            return false;
+-        }
+-    }
+-}
+diff --git a/src/com/android/customization/module/DefaultCustomizationSections.java b/src/com/android/customization/module/DefaultCustomizationSections.java
+index 9b612da..d7bc42e 100644
+--- a/src/com/android/customization/module/DefaultCustomizationSections.java
++++ b/src/com/android/customization/module/DefaultCustomizationSections.java
+@@ -15,8 +15,6 @@ import com.android.customization.model.iconpack.IconPackManager;
+ import com.android.customization.model.iconpack.IconPackSectionController;
+ import com.android.customization.model.iconshape.IconShapeManager;
+ import com.android.customization.model.iconshape.IconShapeSectionController;
+-import com.android.customization.model.lockfont.LockFontSectionController;
+-import com.android.customization.model.lockfont.LockFontManager;
+ import com.android.customization.model.theme.OverlayManagerCompat;
+ import com.android.customization.model.themedicon.ThemedIconSectionController;
+ import com.android.customization.model.themedicon.ThemedIconSwitchProvider;
+@@ -190,11 +188,6 @@ public final class DefaultCustomizationSections implements CustomizationSections
+                                         .get(KeyguardQuickAffordancePickerViewModel.class),
+                                 lifecycleOwner));
+ 
+-                // Lock font section.
+-                sectionControllers.add(new LockFontSectionController(
+-                        LockFontManager.getInstance(activity, new OverlayManagerCompat(activity)),
+-                        sectionNavigationController));
+-
+                 // Notifications section.
+                 sectionControllers.add(
+                         new NotificationSectionController(
+diff --git a/src/com/android/customization/picker/lockfont/LockFontFragment.java b/src/com/android/customization/picker/lockfont/LockFontFragment.java
+deleted file mode 100644
+index ff0b6e4..0000000
+--- a/src/com/android/customization/picker/lockfont/LockFontFragment.java
++++ /dev/null
+@@ -1,205 +0,0 @@
+-/*
+- * Copyright (C) 2018 The Android Open Source Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package com.android.customization.picker.lockfont;
+-
+-import static com.android.wallpaper.widget.BottomActionBar.BottomAction.APPLY_TEXT;
+-
+-import android.os.Bundle;
+-import android.util.Log;
+-import android.view.LayoutInflater;
+-import android.view.SurfaceView;
+-import android.view.View;
+-import android.view.ViewGroup;
+-
+-import androidx.annotation.NonNull;
+-import androidx.annotation.Nullable;
+-import androidx.core.widget.ContentLoadingProgressBar;
+-import androidx.recyclerview.widget.RecyclerView;
+-
+-import com.android.customization.model.CustomizationManager.Callback;
+-import com.android.customization.model.CustomizationManager.OptionsFetchedListener;
+-import com.android.customization.model.CustomizationOption;
+-import com.android.customization.model.lockfont.LockFontOption;
+-import com.android.customization.model.lockfont.LockFontManager;
+-import com.android.customization.model.theme.OverlayManagerCompat;
+-import com.android.customization.module.logging.ThemesUserEventLogger;
+-import com.android.customization.picker.WallpaperPreviewer;
+-import com.android.customization.widget.OptionSelectorController;
+-import com.android.customization.widget.OptionSelectorController.CheckmarkStyle;
+-import com.android.themepicker.R;
+-import com.android.wallpaper.picker.AppbarFragment;
+-import com.android.wallpaper.widget.BottomActionBar;
+-
+-import java.util.List;
+-
+-/**
+- * Fragment that contains the UI for selecting and applying a LockFontOption.
+- */
+-public class LockFontFragment extends AppbarFragment {
+-
+-    private static final String TAG = "LockFontFragment";
+-    private static final String KEY_STATE_SELECTED_OPTION = "LockFontFragment.selectedOption";
+-    private static final String KEY_STATE_BOTTOM_ACTION_BAR_VISIBLE =
+-            "LockFontFragment.bottomActionBarVisible";
+-
+-    public static LockFontFragment newInstance(CharSequence title) {
+-        LockFontFragment fragment = new LockFontFragment();
+-        fragment.setArguments(AppbarFragment.createArguments(title));
+-        return fragment;
+-    }
+-
+-    private RecyclerView mOptionsContainer;
+-    private OptionSelectorController<LockFontOption> mOptionsController;
+-    private LockFontManager mFontManager;
+-    private LockFontOption mSelectedOption;
+-    private ContentLoadingProgressBar mLoading;
+-    private ViewGroup mContent;
+-    private View mError;
+-    private BottomActionBar mBottomActionBar;
+-
+-    private final Callback mApplyFontCallback = new Callback() {
+-        @Override
+-        public void onSuccess() {
+-        }
+-
+-        @Override
+-        public void onError(@Nullable Throwable throwable) {
+-            // Since we disabled it when clicked apply button.
+-            mBottomActionBar.enableActions();
+-            mBottomActionBar.hide();
+-            //TODO(chihhangchuang): handle
+-        }
+-    };
+-
+-    @Nullable
+-    @Override
+-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+-            @Nullable Bundle savedInstanceState) {
+-        View view = inflater.inflate(
+-                R.layout.fragment_lockfont_picker, container, /* attachToRoot */ false);
+-        setUpToolbar(view);
+-        mContent = view.findViewById(R.id.content_section);
+-        mOptionsContainer = view.findViewById(R.id.options_container);
+-        mLoading = view.findViewById(R.id.loading_indicator);
+-        mError = view.findViewById(R.id.error_section);
+-
+-        // For nav bar edge-to-edge effect.
+-        view.setOnApplyWindowInsetsListener((v, windowInsets) -> {
+-            v.setPadding(
+-                    v.getPaddingLeft(),
+-                    windowInsets.getSystemWindowInsetTop(),
+-                    v.getPaddingRight(),
+-                    windowInsets.getSystemWindowInsetBottom());
+-            return windowInsets.consumeSystemWindowInsets();
+-        });
+-
+-        mFontManager = LockFontManager.getInstance(getContext(), new OverlayManagerCompat(getContext()));
+-        setUpOptions(savedInstanceState);
+-
+-        return view;
+-    }
+-
+-    @Override
+-    public void onSaveInstanceState(@NonNull Bundle outState) {
+-        super.onSaveInstanceState(outState);
+-        if (mBottomActionBar != null) {
+-            outState.putBoolean(KEY_STATE_BOTTOM_ACTION_BAR_VISIBLE, mBottomActionBar.isVisible());
+-        }
+-    }
+-
+-    @Override
+-    protected void onBottomActionBarReady(BottomActionBar bottomActionBar) {
+-        super.onBottomActionBarReady(bottomActionBar);
+-        mBottomActionBar = bottomActionBar;
+-        mBottomActionBar.showActionsOnly(APPLY_TEXT);
+-        mBottomActionBar.setActionClickListener(APPLY_TEXT, v -> applyFontOption(mSelectedOption));
+-    }
+-
+-    private void applyFontOption(LockFontOption fontOption) {
+-        mBottomActionBar.disableActions();
+-        mFontManager.apply(fontOption, mApplyFontCallback);
+-    }
+-
+-    private void setUpOptions(@Nullable Bundle savedInstanceState) {
+-        hideError();
+-        mLoading.show();
+-        mFontManager.fetchOptions(new OptionsFetchedListener<LockFontOption>() {
+-            @Override
+-            public void onOptionsLoaded(List<LockFontOption> options) {
+-                mLoading.hide();
+-                mOptionsController = new OptionSelectorController<>(
+-                        mOptionsContainer, options, /* useGrid= */ false, CheckmarkStyle.CORNER);
+-                mOptionsController.initOptions(mFontManager);
+-                mSelectedOption = getActiveOption(options);
+-                mOptionsController.setSelectedOption(mSelectedOption);
+-                onOptionSelected(mSelectedOption);
+-                restoreBottomActionBarVisibility(savedInstanceState);
+-
+-                mOptionsController.addListener(selectedOption -> {
+-                    onOptionSelected(selectedOption);
+-                    mBottomActionBar.show();
+-                });
+-            }
+-
+-            @Override
+-            public void onError(@Nullable Throwable throwable) {
+-                if (throwable != null) {
+-                    Log.e(TAG, "Error loading Font options", throwable);
+-                }
+-                showError();
+-            }
+-        }, /*reload= */ true);
+-    }
+-
+-    private LockFontOption getActiveOption(List<LockFontOption> options) {
+-        return options.stream()
+-                .filter(option -> mFontManager.isActive(option))
+-                .findAny()
+-                // For development only, as there should always be an Font set.
+-                .orElse(options.get(0));
+-    }
+-
+-    private void hideError() {
+-        mContent.setVisibility(View.VISIBLE);
+-        mError.setVisibility(View.GONE);
+-    }
+-
+-    private void showError() {
+-        mLoading.hide();
+-        mContent.setVisibility(View.GONE);
+-        mError.setVisibility(View.VISIBLE);
+-    }
+-
+-    private void onOptionSelected(CustomizationOption selectedOption) {
+-        mSelectedOption = (LockFontOption) selectedOption;
+-        refreshPreview();
+-    }
+-
+-    private void refreshPreview() {
+-        mSelectedOption.bindPreview(mContent);
+-    }
+-
+-    private void restoreBottomActionBarVisibility(@Nullable Bundle savedInstanceState) {
+-        boolean isBottomActionBarVisible = savedInstanceState != null
+-                && savedInstanceState.getBoolean(KEY_STATE_BOTTOM_ACTION_BAR_VISIBLE);
+-        if (mBottomActionBar == null) return;
+-        if (isBottomActionBarVisible) {
+-            mBottomActionBar.show();
+-        } else {
+-            mBottomActionBar.hide();
+-        }
+-    }
+-}
+diff --git a/src/com/android/customization/picker/lockfont/LockFontSectionView.java b/src/com/android/customization/picker/lockfont/LockFontSectionView.java
+deleted file mode 100644
+index f90eb55..0000000
+--- a/src/com/android/customization/picker/lockfont/LockFontSectionView.java
++++ /dev/null
+@@ -1,12 +0,0 @@
+-package com.android.customization.picker.lockfont;
+-
+-import android.content.Context;
+-import android.util.AttributeSet;
+-
+-import com.android.wallpaper.picker.SectionView;
+-
+-public final class LockFontSectionView extends SectionView {
+-    public LockFontSectionView(Context context, AttributeSet attributeSet) {
+-        super(context, attributeSet);
+-    }
+-}
+-- 
+2.39.5
+

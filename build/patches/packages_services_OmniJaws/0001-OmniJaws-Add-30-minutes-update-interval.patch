@@ -1,0 +1,77 @@
+From e40df18f0ed72c70cff7b60299f5d390cc26ce95 Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Wed, 18 Dec 2024 12:46:13 +0000
+Subject: [PATCH] OmniJaws: Add 30 minutes update interval
+
+* Remove 12 hours interval while at it.
+
+Change-Id: I62d01d0cc7ec838803b2cb5727d18c466e6ee568
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ .../org/omnirom/omnijaws/WeatherUpdateService.java   |  2 +-
+ app/src/main/res/values/arrays.xml                   | 12 ++++++------
+ app/src/main/res/values/strings.xml                  |  2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/app/src/main/java/org/omnirom/omnijaws/WeatherUpdateService.java b/app/src/main/java/org/omnirom/omnijaws/WeatherUpdateService.java
+index 34956cb..296a7ed 100644
+--- a/app/src/main/java/org/omnirom/omnijaws/WeatherUpdateService.java
++++ b/app/src/main/java/org/omnirom/omnijaws/WeatherUpdateService.java
+@@ -188,7 +188,7 @@ public class WeatherUpdateService extends JobService {
+         cancelUpdatePeriodic(context);
+ 
+         if (DEBUG) Log.d(TAG, "scheduleUpdatePeriodic");
+-        final long interval = TimeUnit.HOURS.toMillis(Config.getUpdateInterval(context));
++        final long interval = TimeUnit.MINUTES.toMillis(Config.getUpdateInterval(context));
+         final long due = System.currentTimeMillis() + interval;
+ 
+         if (DEBUG) Log.d(TAG, "Scheduling next update at " + new Date(due));
+diff --git a/app/src/main/res/values/arrays.xml b/app/src/main/res/values/arrays.xml
+index 230e8fb..874fc28 100644
+--- a/app/src/main/res/values/arrays.xml
++++ b/app/src/main/res/values/arrays.xml
+@@ -34,18 +34,18 @@
+         <item>1</item>
+     </string-array>
+     <string-array name="update_interval_entries" translatable="false">
++        <item>@string/interval_30_minutes</item>
+         <item>@string/interval_1_hour</item>
+         <item>@string/interval_2_hour</item>
+         <item>@string/interval_4_hour</item>
+         <item>@string/interval_6_hour</item>
+-        <item>@string/interval_12_hour</item>
+     </string-array>
+     <string-array name="update_interval_values" translatable="false">
+-        <item>1</item>
+-        <item>2</item>
+-        <item>4</item>
+-        <item>6</item>
+-        <item>12</item>
++        <item>30</item>
++        <item>60</item>
++        <item>120</item>
++        <item>240</item>
++        <item>360</item>
+     </string-array>
+     <string-array name="color_theme_entries" translatable="false">
+         <item>@string/theme_light</item>
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index b1d5932..73394c3 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -38,11 +38,11 @@
+     <string name="update">Update</string>
+     <string name="enable_title">Enable</string>
+     <string name="update_interval_title">Update interval</string>
++    <string name="interval_30_minutes">30 minutes</string>
+     <string name="interval_1_hour">1 hour</string>
+     <string name="interval_2_hour">2 hours</string>
+     <string name="interval_4_hour">4 hours</string>
+     <string name="interval_6_hour">6 hours</string>
+-    <string name="interval_12_hour">12 hours</string>
+     <string name="weather_tile_title">Weather</string>
+     <string name="weather_icon_pack_title">Condition icon pack</string>
+     <string name="weather_icon_pack_playstore">Find icon packs</string>
+-- 
+2.39.5
+

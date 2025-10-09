@@ -1,0 +1,25 @@
+From 82548328989ad8333f2091159fa5edbe8460b39a Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Sun, 5 Oct 2025 14:42:32 +0800
+Subject: [PATCH 4/8] fix statsd disabled spam
+
+Change-Id: I28c3508c7722461c853e4fcff4d3280c6bbcf670
+---
+ cmds/servicemanager/ServiceManager.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cmds/servicemanager/ServiceManager.cpp b/cmds/servicemanager/ServiceManager.cpp
+index 59c4d53..b88ef4e 100644
+--- a/cmds/servicemanager/ServiceManager.cpp
++++ b/cmds/servicemanager/ServiceManager.cpp
+@@ -879,6 +879,7 @@ void ServiceManager::binderDied(const wp<IBinder>& who) {
+ }
+ 
+ void ServiceManager::tryStartService(const Access::CallingContext& ctx, const std::string& name) {
++    if (name == "stats") return;
+     ALOGI("%s Since '%s' could not be found trying to start it as a lazy AIDL service. (if it's "
+           "not configured to be a lazy service, it may be stuck starting or still starting).",
+           ctx.toDebugString().c_str(), name.c_str());
+-- 
+2.39.5
+

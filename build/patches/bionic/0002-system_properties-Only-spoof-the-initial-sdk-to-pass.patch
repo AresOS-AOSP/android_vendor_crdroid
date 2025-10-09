@@ -1,0 +1,39 @@
+From dda8180a305469238fcb4b3f717df8efcdc3cf9a Mon Sep 17 00:00:00 2001
+From: Alvin Francis <nivlafx@gmail.com>
+Date: Sat, 22 Jun 2024 01:16:03 -0400
+Subject: [PATCH 2/4] system_properties: Only spoof the initial sdk to pass
+ basic
+
+Signed-off-by: Alvin Francis <nivlafx@gmail.com>
+---
+ libc/system_properties/prop_imitation_hooks.cpp | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/libc/system_properties/prop_imitation_hooks.cpp b/libc/system_properties/prop_imitation_hooks.cpp
+index 99b145e..6791fdb 100644
+--- a/libc/system_properties/prop_imitation_hooks.cpp
++++ b/libc/system_properties/prop_imitation_hooks.cpp
+@@ -11,9 +11,6 @@
+ 
+ #define GMS_UNSTABLE "com.google.android.gms.unstable"
+ 
+-#define PROP_SECURITY_PATCH "ro.build.version.security_patch"
+-#define PROP_PIH_SECURITY_PATCH "persist.sys.pihooks.security_patch"
+-
+ #define PROP_FIRST_API_LEVEL "ro.product.first_api_level"
+ #define PROP_PIH_FIRST_API_LEVEL "persist.sys.pihooks.first_api_level"
+ 
+@@ -22,9 +19,7 @@ void PropImitationHooks::OnFind(const char** name) {
+     return;
+   }
+   PIH_LOG("name is %s", *name);
+-  if (strcmp(*name, PROP_SECURITY_PATCH) == 0) {
+-    *name = PROP_PIH_SECURITY_PATCH;
+-  } else if (strcmp(*name, PROP_FIRST_API_LEVEL) == 0) {
++  if (strcmp(*name, PROP_FIRST_API_LEVEL) == 0) {
+     *name = PROP_PIH_FIRST_API_LEVEL;
+   } else {
+     return;
+-- 
+2.39.5
+
