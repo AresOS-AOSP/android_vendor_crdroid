@@ -1,0 +1,26 @@
+From b6b9f1feb4633f67af85f3ec2a0d48eaeeab2789 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Tue, 17 Mar 2026 13:23:29 +0800
+Subject: [PATCH] exposing pffft to axion fx and steam audio
+
+Change-Id: I2f3eb50dc0bd5acb555cf473d739ff3007401ba2
+---
+ Android.bp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Android.bp b/Android.bp
+index 49694e3..d327f94 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -48,6 +48,8 @@ cc_library_static {
+         "//frameworks/av/media/libaudioclient/tests",
+         "//hardware/interfaces/audio/aidl/vts",
+         "//vendor:__subpackages__",
++        "//packages/apps/AxionFx:__subpackages__",
++        "//external/steam-audio:__subpackages__",
+     ],
+     cflags: [
+         "-Wno-#pragma-messages",
+-- 
+2.39.5
+

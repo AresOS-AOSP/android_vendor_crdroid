@@ -1,0 +1,28 @@
+From f12f4a63586490df54a841fae98c35347064df26 Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Sun, 9 Aug 2026 13:51:29 +0300
+Subject: [PATCH] sepolicy: Allow Settings to read /proc/cmdline
+
+Change-Id: I4f1d8ed7a6df1e31dfb0ef0221e9ca278b0a80d9
+Signed-off-by: ChrisCatto <chriscatto@proton.me>
+---
+ common/private/system_app.te | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/common/private/system_app.te b/common/private/system_app.te
+index 8ce7069..4c49855 100644
+--- a/common/private/system_app.te
++++ b/common/private/system_app.te
+@@ -18,6 +18,9 @@ set_prop(system_app, recovery_update_prop)
+ # Allow Settings to read default navbar prop
+ get_prop(system_app, qemu_hw_prop)
+ 
++# Allow Settings to read /proc/cmdline
++allow system_app proc_cmdline:file r_file_perms;
++
+ # Allow GameSpace to set process group
+ allow system_app cgroup:dir search;
+ allow system_app cgroup:file rw_file_perms;
+-- 
+2.53.0
+

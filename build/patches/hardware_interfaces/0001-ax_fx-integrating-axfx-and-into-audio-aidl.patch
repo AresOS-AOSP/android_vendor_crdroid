@@ -1,0 +1,72 @@
+From 9089d5cfe8356e00271e83bd988b2f542db6be3b Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Mon, 16 Mar 2026 20:45:42 +0800
+Subject: [PATCH 1/2] [ax_fx] integrating axfx and into audio aidl
+
+adding loadHardcodedEffects() to EffectFactory to discover and load libaxionfxaidl.so from vendor soundfx path at runtime
+
+Co-Authored-By: ionutgherman <ionutgherman@users.noreply.github.com>
+Change-Id: I881ec37aaf8dd79df6eb52dafb417519a7a9a523
+Signed-off-by: rmp22 <195054967+rmp22@users.noreply.github.com>
+---
+ audio/aidl/default/EffectFactory.cpp          | 26 +++++++++++++++++++
+ .../effectFactory-impl/EffectFactory.h        |  1 +
+ 2 files changed, 27 insertions(+)
+
+diff --git a/audio/aidl/default/EffectFactory.cpp b/audio/aidl/default/EffectFactory.cpp
+index e3894f9..9b1e442 100644
+--- a/audio/aidl/default/EffectFactory.cpp
++++ b/audio/aidl/default/EffectFactory.cpp
+@@ -39,6 +39,7 @@ namespace aidl::android::hardware::audio::effect {
+ Factory::Factory(const std::string& file) : mConfig(EffectConfig(file)) {
+     LOG(DEBUG) << __func__ << " with config file: " << file;
+     loadEffectLibs();
++    loadHardcodedEffects();
+ }
+ 
+ Factory::~Factory() {
+@@ -297,4 +298,29 @@ void Factory::getDlSyms_l(DlEntry& entry) {
+     }
+ }
+ 
++void Factory::loadHardcodedEffects() {
++    static const char* kAxionFxLibPaths[] = {
++        "/vendor/lib64/soundfx/libaxionfxaidl.so",
++        "/vendor/lib/soundfx/libaxionfxaidl.so"
++    };
++
++    for (const char* libPath : kAxionFxLibPaths) {
++        if (access(libPath, R_OK) != 0) {
++            continue;
++        }
++
++        Descriptor::Identity id;
++        id.type = getEffectTypeUuidAxionFx();
++        id.uuid = getEffectImplUuidAxionFx();
++        id.proxy = std::nullopt;
++
++        LOG(INFO) << __func__ << " loading hardcoded AxionFx effect from " << libPath;
++        if (openEffectLibrary(id.uuid, libPath)) {
++            mIdentitySet.insert(std::move(id));
++        }
++        return;
++    }
++    LOG(DEBUG) << __func__ << " AxionFx library not found, skipping";
++}
++
+ }  // namespace aidl::android::hardware::audio::effect
+diff --git a/audio/aidl/default/include/effectFactory-impl/EffectFactory.h b/audio/aidl/default/include/effectFactory-impl/EffectFactory.h
+index d0b8204..9127dda 100644
+--- a/audio/aidl/default/include/effectFactory-impl/EffectFactory.h
++++ b/audio/aidl/default/include/effectFactory-impl/EffectFactory.h
+@@ -118,6 +118,7 @@ class Factory : public BnFactory {
+             REQUIRES(mMutex);
+ 
+     void loadEffectLibs();
++    void loadHardcodedEffects();
+     /* Get effect_dl_interface_s from library handle */
+     void getDlSyms_l(DlEntry& entry) REQUIRES(mMutex);
+ };
+-- 
+2.39.5
+

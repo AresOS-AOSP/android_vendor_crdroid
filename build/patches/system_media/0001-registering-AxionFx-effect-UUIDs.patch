@@ -1,0 +1,99 @@
+From e901c8837ae63474a53a56fb8118b14bf455f3b7 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Mon, 16 Mar 2026 20:42:42 +0800
+Subject: [PATCH] registering AxionFx effect UUIDs
+
+adding type & implementation UUIDs for axfx audio effect engine to the system audio effects UUID registry.
+
+AxionFx type - 5867be72-4060-4c55-a378-c1cdef3e1353
+AxionFx impl - f35cb927-a887-4f3d-847f-770634486d53
+
+Co-Authored-By: ionutgherman <ionutgherman@users.noreply.github.com>
+Change-Id: Iad9a3978842c15705f8cf858ebcd790666b92882
+Signed-off-by: rmp22 <195054967+rmp22@users.noreply.github.com>
+---
+ .../system/audio_effects/effect_axionfx.h     | 38 +++++++++++++++++++
+ .../system/audio_effects/effect_uuid.h        |  8 +++-
+ 2 files changed, 44 insertions(+), 2 deletions(-)
+ create mode 100644 audio/include/system/audio_effects/effect_axionfx.h
+
+diff --git a/audio/include/system/audio_effects/effect_axionfx.h b/audio/include/system/audio_effects/effect_axionfx.h
+new file mode 100644
+index 0000000..4e23b47
+--- /dev/null
++++ b/audio/include/system/audio_effects/effect_axionfx.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (C) 2025-2026 AxionOS
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef ANDROID_EFFECT_AXIONFX_CORE_H_
++#define ANDROID_EFFECT_AXIONFX_CORE_H_
++
++#include <system/audio_effect.h>
++
++#if __cplusplus
++extern "C" {
++#endif
++
++static const effect_uuid_t SL_IID_AXIONFX_ =
++    { 0x5867be72, 0x4060, 0x4c55, 0xa378, { 0xc1, 0xcd, 0xef, 0x3e, 0x13, 0x53 } };
++const effect_uuid_t * const SL_IID_AXIONFX = &SL_IID_AXIONFX_;
++
++static const effect_uuid_t SL_IID_AXIONFX_IMPL_ =
++    { 0xf35cb927, 0xa887, 0x4f3d, 0x847f, { 0x77, 0x06, 0x34, 0x48, 0x6d, 0x53 } };
++const effect_uuid_t * const SL_IID_AXIONFX_IMPL = &SL_IID_AXIONFX_IMPL_;
++
++#if __cplusplus
++}  // extern "C"
++#endif
++
++#endif /*ANDROID_EFFECT_AXIONFX_CORE_H_*/
+diff --git a/audio/include/system/audio_effects/effect_uuid.h b/audio/include/system/audio_effects/effect_uuid.h
+index a104c23..652b909 100644
+--- a/audio/include/system/audio_effects/effect_uuid.h
++++ b/audio/include/system/audio_effects/effect_uuid.h
+@@ -119,6 +119,8 @@ constexpr char kEffectUuidNull[] = "ec7178ec-e5e1-4432-a3f4-4657e6795210";
+ constexpr char kEffectUuidZero[] = "00000000-0000-0000-0000-000000000000";
+ constexpr char kEffectTypeUuidExtension[] = "fa81dbde-588b-11ed-9b6a-0242ac120002";
+ constexpr char kEffectImplUuidExtension[] = "fa81dd00-588b-11ed-9b6a-0242ac120002";
++constexpr char kEffectTypeUuidAxionFx[] = "5867be72-4060-4c55-a378-c1cdef3e1353";
++constexpr char kEffectImplUuidAxionFx[] = "f35cb927-a887-4f3d-847f-770634486d53";
+ 
+ #define EFFECT_TYPE_UUID_LIST_DEF(V)  \
+     V(TypeUuidAcousticEchoCanceler)   \
+@@ -138,7 +140,8 @@ constexpr char kEffectImplUuidExtension[] = "fa81dd00-588b-11ed-9b6a-0242ac12000
+     V(TypeUuidSpatializer)            \
+     V(TypeUuidVirtualizer)            \
+     V(TypeUuidVisualizer)             \
+-    V(TypeUuidVolume)
++    V(TypeUuidVolume)                 \
++    V(TypeUuidAxionFx)
+ 
+ #define EFFECT_IMPL_UUID_LIST_DEF(V)    \
+     V(ImplUuidAcousticEchoCancelerSw)   \
+@@ -176,7 +179,8 @@ constexpr char kEffectImplUuidExtension[] = "fa81dd00-588b-11ed-9b6a-0242ac12000
+     V(ImplUuidVisualizerProxy)          \
+     V(ImplUuidVolumeSw)                 \
+     V(ImplUuidVolumeBundle)             \
+-    V(ImplUuidSpatializerSw)
++    V(ImplUuidSpatializerSw)            \
++    V(ImplUuidAxionFx)
+ 
+ #define EFFECT_OTHER_UUID_LIST_DEF(V) \
+     V(UuidNull)                           \
+-- 
+2.39.5
+

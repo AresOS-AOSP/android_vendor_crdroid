@@ -1,0 +1,43 @@
+From dad7370194bd818a4f2d9d3202796680ce1dae3b Mon Sep 17 00:00:00 2001
+From: Jake Weinstein <jake@aospa.co>
+Date: Sat, 14 Jan 2023 05:44:56 +0900
+Subject: [PATCH 1/2] task_profiles: Use foreground cpuset for SurfaceFlinger
+
+Critical threads go to top-app, less critical threads
+currently go to system-background, but this starves
+SF and leads to performance regressions. Moving
+SF to the foreground cpuset still puts it below
+the most critical threads, but allows it to use
+some of the big cores.
+
+Change-Id: I99050859d936d0d334877e7fa1e803b4f79bd8ec
+Signed-off-by: Ghosuto <clash.raja10@gmail.com>
+---
+ libprocessgroup/profiles/task_profiles.json | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libprocessgroup/profiles/task_profiles.json b/libprocessgroup/profiles/task_profiles.json
+index 1d23d9c..35c0043 100644
+--- a/libprocessgroup/profiles/task_profiles.json
++++ b/libprocessgroup/profiles/task_profiles.json
+@@ -570,7 +570,7 @@
+           "Params":
+           {
+             "Controller": "cpuset",
+-            "Path": "system-background"
++            "Path": "foreground"
+           }
+         }
+       ]
+@@ -583,7 +583,7 @@
+           "Params":
+           {
+             "Controller": "cpuset",
+-            "Path": "system-background"
++            "Path": "foreground"
+           }
+         }
+       ]
+-- 
+2.51.0
+

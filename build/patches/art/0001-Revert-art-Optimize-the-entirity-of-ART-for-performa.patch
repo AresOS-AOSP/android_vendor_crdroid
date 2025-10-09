@@ -1,0 +1,26 @@
+From 565855412d82ccaef0061e806751974d3a902962 Mon Sep 17 00:00:00 2001
+From: priiii08918 <priyanshusinghal0818@proton.me>
+Date: Mon, 15 Sep 2025 17:59:40 +0000
+Subject: [PATCH 1/6] Revert "art: Optimize the entirity of ART for
+ performance"
+
+This reverts commit 5478d9069ccafa4dc493bd430e32c3e649bd6be6.
+---
+ build/Android.bp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/build/Android.bp b/build/Android.bp
+index 5d89742..f69b22e 100644
+--- a/build/Android.bp
++++ b/build/Android.bp
+@@ -103,7 +103,6 @@ art_global_defaults {
+         "-Wshadow",
+         "-Wunused",
+         "-fvisibility=protected",
+-        "-O3",
+ 
+         // Warn about thread safety violations with clang.
+         "-Wthread-safety",
+-- 
+2.39.5
+

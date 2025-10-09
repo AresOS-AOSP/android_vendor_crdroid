@@ -1,0 +1,101 @@
+From 80f2f723cd959d5458019e2da004a80d4956d9d0 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Sun, 12 Apr 2026 13:01:08 +0800
+Subject: [PATCH 2/2] [ax_perf] fixing statsd noop cpu drain and adding write
+ backoff
+
+previous noop removed socket listener entirely causing client-side EAGAIN retry storms, socket_writer_q thread in 13+ system processes retried failed writes every 5ms indefinitely burning ~22% total cpu. restored listener with filtering enabled and empty atom set so socket drains fast and atoms discarded without processing. also added exponential backoff (50ms base, 2s cap) with max 20 retries in libstatssocket client to prevent infinite retry loops on any future socket failures
+
+Change-Id: Ib780d9f990f36878511ea2dba310696297187222
+---
+ .../stats_buffer_writer_queue.cpp              | 18 +++++++++++++++++-
+ .../stats_buffer_writer_queue_impl.h           |  6 ++++--
+ statsd/src/main.cpp                            |  5 +++++
+ 3 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/lib/libstatssocket/stats_buffer_writer_queue.cpp b/lib/libstatssocket/stats_buffer_writer_queue.cpp
+index 6d3a6b1..9dcabb4 100644
+--- a/lib/libstatssocket/stats_buffer_writer_queue.cpp
++++ b/lib/libstatssocket/stats_buffer_writer_queue.cpp
+@@ -111,6 +111,8 @@ void BufferWriterQueue::drainQueue() {
+ 
+ void BufferWriterQueue::processCommands() {
+     prctl(PR_SET_NAME, "socket_writer_queue");
++    int retryCount = 0;
++    int currentDelayMs = kDelayOnFailedWriteMs;
+     while (true) {
+         // temporary local thread copy
+         Cmd cmd;
+@@ -140,6 +142,8 @@ void BufferWriterQueue::processCommands() {
+                 // buffer is NULL
+                 mCmdQueue.pop();
+             }
++            retryCount = 0;
++            currentDelayMs = kDelayOnFailedWriteMs;
+         }
+         // TODO (b/258003151): add logging info about retry count
+ 
+@@ -151,7 +155,19 @@ void BufferWriterQueue::processCommands() {
+         // in case of failed write due to socket overflow the sleep can be longer
+         // to not overload socket continuously
+         if (!writeSuccess) {
+-            std::this_thread::sleep_for(std::chrono::milliseconds(kDelayOnFailedWriteMs));
++            retryCount++;
++            if (retryCount >= kMaxWriteRetries) {
++                free(cmd.buffer);
++                {
++                    std::lock_guard lock(mMutex);
++                    mCmdQueue.pop();
++                }
++                retryCount = 0;
++                currentDelayMs = kDelayOnFailedWriteMs;
++            } else {
++                std::this_thread::sleep_for(std::chrono::milliseconds(currentDelayMs));
++                currentDelayMs = std::min(currentDelayMs * 2, kMaxDelayOnFailedWriteMs);
++            }
+         }
+     }
+ }
+diff --git a/lib/libstatssocket/stats_buffer_writer_queue_impl.h b/lib/libstatssocket/stats_buffer_writer_queue_impl.h
+index 458dc6d..228b087 100644
+--- a/lib/libstatssocket/stats_buffer_writer_queue_impl.h
++++ b/lib/libstatssocket/stats_buffer_writer_queue_impl.h
+@@ -27,8 +27,10 @@
+ 
+ class BufferWriterQueue {
+ public:
+-    constexpr static int kDelayOnFailedWriteMs = 5;
+-    constexpr static int kQueueMaxSizeLimit = 4800;  // 2X max_dgram_qlen
++    constexpr static int kDelayOnFailedWriteMs = 50;
++    constexpr static int kMaxDelayOnFailedWriteMs = 2000;
++    constexpr static int kMaxWriteRetries = 20;
++    constexpr static int kQueueMaxSizeLimit = 4800;
+ 
+     BufferWriterQueue();
+     virtual ~BufferWriterQueue();
+diff --git a/statsd/src/main.cpp b/statsd/src/main.cpp
+index fb20637..e553d34 100644
+--- a/statsd/src/main.cpp
++++ b/statsd/src/main.cpp
+@@ -98,6 +98,10 @@ int main(int /*argc*/, char** /*argv*/) {
+     sp<UidMap> uidMap = UidMap::getInstance();
+ 
+     std::shared_ptr<LogEventFilter> logEventFilter = std::make_shared<LogEventFilter>();
++    logEventFilter->setFilteringEnabled(true);
++
++    gSocketListener = new StatsSocketListener(eventQueue, logEventFilter);
++    gSocketListener->startListener();
+ 
+     // Create the service
+     gStatsService = SharedRefBase::make<StatsService>(uidMap, eventQueue, logEventFilter);
+@@ -128,6 +132,7 @@ int main(int /*argc*/, char** /*argv*/) {
+             if (i < 0) {
+                 if (errno == EINTR) continue;
+             }
++            gSocketListener->stopListener();
+             gStatsService->Terminate();
+             // return the signal handler to its default disposition, then raise the signal again
+             signal(SIGTERM, SIG_DFL);
+-- 
+2.51.0
+

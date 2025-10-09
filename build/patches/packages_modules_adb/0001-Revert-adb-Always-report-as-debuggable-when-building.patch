@@ -1,0 +1,166 @@
+From 8cd2469f645f7ad6ad9793481527e10b1d378580 Mon Sep 17 00:00:00 2001
+From: ChrisCatto <chriscatto@proton.me>
+Date: Mon, 23 Feb 2026 20:05:45 +0000
+Subject: [PATCH 1/2] Revert "adb: Always report as debuggable when building
+ userdebug/eng"
+
+This reverts commit e37e39ff31b960a5168818e3e0a57f88151a4ec0.
+---
+ Android.bp                 | 20 --------------------
+ daemon/main.cpp            |  6 +++---
+ daemon/restart_service.cpp |  2 +-
+ daemon/services.cpp        |  4 ++--
+ daemon/tradeinmode.cpp     |  3 +--
+ root/adbroot_service.cpp   |  2 +-
+ sockets.cpp                |  3 +--
+ 7 files changed, 9 insertions(+), 31 deletions(-)
+
+diff --git a/Android.bp b/Android.bp
+index 088d2ec..3b4d513 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -44,16 +44,7 @@ cc_defaults {
+         "-Wvla",
+         "-DADB_HOST=1", // overridden by adbd_defaults
+         "-DANDROID_BASE_UNIQUE_FD_DISABLE_IMPLICIT_CONVERSION=1",
+-        "-DANDROID_DEBUGGABLE=0",
+     ],
+-    product_variables: {
+-        debuggable: {
+-            cflags: [
+-                "-UANDROID_DEBUGGABLE",
+-                "-DANDROID_DEBUGGABLE=1",
+-            ],
+-        },
+-    },
+     cpp_std: "experimental",
+ 
+     use_version_lib: true,
+@@ -936,17 +927,6 @@ cc_binary {
+     init_rc: [
+         "root/adb_root.rc",
+     ],
+-    cflags: [
+-        "-DANDROID_DEBUGGABLE=0",
+-    ],
+-    product_variables: {
+-        debuggable: {
+-            cflags: [
+-                "-UANDROID_DEBUGGABLE",
+-                "-DANDROID_DEBUGGABLE=1",
+-            ],
+-        },
+-    },
+     shared_libs: [
+         "libbase",
+         "libbinder",
+diff --git a/daemon/main.cpp b/daemon/main.cpp
+index 87e56dd..71f67ea 100644
+--- a/daemon/main.cpp
++++ b/daemon/main.cpp
+@@ -75,7 +75,7 @@ static bool should_drop_privileges() {
+     // ro.secure:
+     //   Drop privileges by default. Set to 1 on userdebug and user builds.
+     bool ro_secure = android::base::GetBoolProperty("ro.secure", true);
+-    bool ro_debuggable = ANDROID_DEBUGGABLE || __android_log_is_debuggable();
++    bool ro_debuggable = __android_log_is_debuggable();
+ 
+     // Drop privileges if ro.secure is set...
+     bool drop = ro_secure;
+@@ -120,7 +120,7 @@ static void drop_privileges() {
+ 
+     // Don't run as root if running in secure mode.
+     if (should_drop_privileges()) {
+-        const bool should_drop_caps = !ANDROID_DEBUGGABLE && !__android_log_is_debuggable();
++        const bool should_drop_caps = !__android_log_is_debuggable();
+ 
+         if (should_drop_caps) {
+             // CAP_SETUI and CAP_SETGID are required for change_uid and change_gid calls below.
+@@ -221,7 +221,7 @@ int adbd_main() {
+ 
+ #if defined(__ANDROID__)
+     bool device_unlocked = android::base::GetProperty("ro.boot.verifiedbootstate", "") == "orange";
+-    if (device_unlocked || ANDROID_DEBUGGABLE || __android_log_is_debuggable()) {
++    if (device_unlocked || __android_log_is_debuggable()) {
+         // If we're on userdebug/eng or the device is unlocked, permit no-authentication.
+         auth_required = android::base::GetBoolProperty("ro.adb.secure", false);
+ #if defined(__ANDROID_RECOVERY__)
+diff --git a/daemon/restart_service.cpp b/daemon/restart_service.cpp
+index 8934db3..c942c1f 100644
+--- a/daemon/restart_service.cpp
++++ b/daemon/restart_service.cpp
+@@ -53,7 +53,7 @@ void restart_root_service(unique_fd fd) {
+     bool enabled = false;
+     if (auto status = service->getEnabled(&enabled); !status.isOk()) {
+ #endif
+-    if (!ANDROID_DEBUGGABLE && !__android_log_is_debuggable()) {
++    if (!__android_log_is_debuggable()) {
+         WriteFdExactly(fd.get(), "adbd cannot run as root in production builds\n");
+         return;
+     }
+diff --git a/daemon/services.cpp b/daemon/services.cpp
+index 1f0cbe6..152603c 100644
+--- a/daemon/services.cpp
++++ b/daemon/services.cpp
+@@ -123,7 +123,7 @@ unique_fd ShellService(std::string_view args, const atransport* transport) {
+ }
+ 
+ static void spin_service(unique_fd fd) {
+-    if (!ANDROID_DEBUGGABLE && !__android_log_is_debuggable()) {
++    if (!__android_log_is_debuggable()) {
+         WriteFdExactly(fd.get(), "refusing to spin on non-debuggable build\n");
+         return;
+     }
+@@ -146,7 +146,7 @@ static void spin_service(unique_fd fd) {
+ 
+ [[maybe_unused]] static unique_fd reboot_device(const std::string& name) {
+ #if defined(__ANDROID_RECOVERY__)
+-    if (!ANDROID_DEBUGGABLE && !__android_log_is_debuggable()) {
++    if (!__android_log_is_debuggable()) {
+         auto reboot_service = [name](unique_fd fd) {
+             std::string reboot_string = android::base::StringPrintf("reboot,%s", name.c_str());
+             if (!android::base::SetProperty(ANDROID_RB_PROPERTY, reboot_string)) {
+diff --git a/daemon/tradeinmode.cpp b/daemon/tradeinmode.cpp
+index 9e76bac..fbac8eb 100644
+--- a/daemon/tradeinmode.cpp
++++ b/daemon/tradeinmode.cpp
+@@ -82,8 +82,7 @@ bool is_in_tradein_evaluation_mode() {
+ bool allow_tradeinmode_command(std::string_view name) {
+ #if defined(__ANDROID__)
+     // Allow "adb root" from trade-in-mode so that automated testing is possible.
+-    if ((ANDROID_DEBUGGABLE || __android_log_is_debuggable()) &&
+-        android::base::ConsumePrefix(&name, "root:")) {
++    if (__android_log_is_debuggable() && android::base::ConsumePrefix(&name, "root:")) {
+         return true;
+     }
+ #endif
+diff --git a/root/adbroot_service.cpp b/root/adbroot_service.cpp
+index 9e135d4..ff30f4b 100644
+--- a/root/adbroot_service.cpp
++++ b/root/adbroot_service.cpp
+@@ -106,7 +106,7 @@ ndk::ScopedAStatus ADBRootService::isSupported(bool* _aidl_return) {
+     }
+ 
+     AutoMutex _l(lock_);
+-    *_aidl_return = ANDROID_DEBUGGABLE || __android_log_is_debuggable();
++    *_aidl_return = __android_log_is_debuggable();
+     return ndk::ScopedAStatus::ok();
+ }
+ 
+diff --git a/sockets.cpp b/sockets.cpp
+index edb42dd..acb3de1 100644
+--- a/sockets.cpp
++++ b/sockets.cpp
+@@ -473,8 +473,7 @@ asocket* create_local_service_socket(std::string_view name, atransport* transpor
+     VLOG(SOCKETS) << "LS(" << s->id << "): bound to '" << name << "' via " << fd_value;
+ 
+ #if !ADB_HOST
+-    if ((name.starts_with("root:") && getuid() != 0 &&
+-         (ANDROID_DEBUGGABLE || __android_log_is_debuggable())) ||
++    if ((name.starts_with("root:") && getuid() != 0 && __android_log_is_debuggable()) ||
+         (name.starts_with("unroot:") && getuid() == 0) || name.starts_with("usb:") ||
+         name.starts_with("tcpip:")) {
+         D("LS(%d): enabling exit_on_close", s->id);
+-- 
+2.51.0
+

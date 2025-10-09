@@ -1,0 +1,29 @@
+From b6036be48826aeca953044212224b1f3f1f9d0d5 Mon Sep 17 00:00:00 2001
+From: rmp22 <195054967+rmp22@users.noreply.github.com>
+Date: Sun, 12 Apr 2026 22:13:59 +0800
+Subject: [PATCH 3/3] [ax_perf] reducing spatializer sensor polling from 10ms
+ to 100ms
+
+SpatializerPoseController was requesting hinge angle sensor at 10ms (100Hz) for head tracking. on a foldable sitting flat this is unnecessary, 100ms (10Hz) is sufficient for hinge-based spatial audio adjustments and reduces sensor HAL wakeups 10x
+
+Change-Id: I2c9f82c21953e9056e0fa70f48e9a061594f643f
+---
+ services/audiopolicy/service/Spatializer.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/audiopolicy/service/Spatializer.cpp b/services/audiopolicy/service/Spatializer.cpp
+index b054b26..7f8580b 100644
+--- a/services/audiopolicy/service/Spatializer.cpp
++++ b/services/audiopolicy/service/Spatializer.cpp
+@@ -1197,7 +1197,7 @@ void Spatializer::checkPoseController_l() {
+     if (isControllerNeeded && mPoseController == nullptr) {
+         mPoseController = std::make_shared<SpatializerPoseController>(
+                 static_cast<SpatializerPoseController::Listener*>(this),
+-                10ms, std::nullopt);
++                100ms, std::nullopt);
+         LOG_ALWAYS_FATAL_IF(mPoseController == nullptr,
+                             "%s could not allocate pose controller", __func__);
+         mPoseController->setDisplayOrientation(mDisplayOrientation);
+-- 
+2.39.5
+

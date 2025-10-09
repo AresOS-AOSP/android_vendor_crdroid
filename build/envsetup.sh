@@ -1031,6 +1031,20 @@ function generate_host_overrides() {
 
 generate_host_overrides
 
+function ap() {
+    for project_name in $(cd "${ANDROID_BUILD_TOP}/vendor/lineage/build/patches" && echo */); do
+        project_path="$(tr _ / <<<"$project_name")"
+        cd "$(gettop)/${project_path}" || continue
+
+        git am "${ANDROID_BUILD_TOP}/vendor/lineage/build/patches/${project_name}"/*.patch --no-gpg-sign || \
+        git am --abort >/dev/null 2>&1
+    done
+
+    croot >/dev/null 2>&1
+}
+
+ap
+
 export SKIP_ABI_CHECKS=true
 
 export USE_THINLTO_CACHE=true
