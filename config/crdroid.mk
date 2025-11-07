@@ -34,6 +34,23 @@ endif
 
 PRODUCT_SYSTEM_PROPERTIES += ro.surface_flinger.supports_background_blur=1
 
+# PIF values
+PRODUCT_PRODUCT_PROPERTIES += \
+    persist.sys.pihooks_MANUFACTURER?=Google \
+    persist.sys.pihooks_BRAND?=google \
+    persist.sys.pihooks_PRODUCT?=caiman_beta \
+    persist.sys.pihooks_DEVICE?=caiman \
+    persist.sys.pihooks_ID?=BP41.250916.010.A1 \
+    persist.sys.pihooks_RELEASE?=16 \
+    persist.sys.pihooks_SECURITY_PATCH?=2025-10-05 \
+    persist.sys.pihooks_DEVICE_INITIAL_SDK_INT?=32 \
+    persist.sys.pihooks_SDK_INT?=36 \
+    persist.sys.pixelprops.gms=true
+
+PRODUCT_BUILD_PROP_OVERRIDES += \
+    PihooksGmsFp="google/caiman_beta/caiman:16/BP41.250916.010.A1/14281945:user/release-keys" \
+    PihooksGmsModel="Pixel 9 Pro"
+
 # Cloned app exemption
 PRODUCT_COPY_FILES += \
     vendor/lineage/prebuilt/common/etc/sysconfig/preinstalled-packages-platform-crdroid-product.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/preinstalled-packages-platform-crdroid-product.xml
