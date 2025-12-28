@@ -83,3 +83,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_VENDOR_PROPERTIES += \
     ro.usb.uvc.enabled=true
 endif
+
+# Google Wallpaper Overlays
+PRODUCT_PACKAGES += \
+    WallpaperPicker2Overlay \
+    WallpaperPicker2PixelOverlay
