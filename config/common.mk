@@ -24,6 +24,14 @@ ifeq ($(WITH_GMS),true)
 $(call inherit-product, vendor/pixel/gms/products/gms.mk)
 endif
 
+ifeq ($(WITH_GMS),true)
+PRODUCT_PACKAGES += \
+    SettingsOverlayPixelThemePicker
+else
+PRODUCT_PACKAGES += \
+    SettingsOverlay
+endif
+
 ifeq ($(PRODUCT_IS_ATV),true)
 ifeq ($(PRODUCT_ATV_CLIENTID_BASE),)
 PRODUCT_PRODUCT_PROPERTIES += \
