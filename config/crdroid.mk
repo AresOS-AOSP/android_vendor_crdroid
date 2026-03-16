@@ -17,6 +17,12 @@ PRODUCT_PRODUCT_PROPERTIES += \
     persist.sys.dun.override=0 \
     persist.sys.disable_rescue=true
 
+# AxionFx
+TARGET_INCLUDE_AXFX ?= true
+ifeq ($(TARGET_INCLUDE_AXFX),true)
+$(call inherit-product-if-exists, packages/apps/AxionFx/config.mk)
+endif
+
 # Disable touch video heatmap to reduce latency, motion jitter, and CPU usage
 # on supported devices with Deep Press input classifier HALs and models
 PRODUCT_PRODUCT_PROPERTIES += \
